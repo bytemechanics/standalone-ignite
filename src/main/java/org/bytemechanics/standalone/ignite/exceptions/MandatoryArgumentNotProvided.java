@@ -15,22 +15,21 @@
  */
 package org.bytemechanics.standalone.ignite.exceptions;
 
+import org.bytemechanics.standalone.ignite.Parameter;
 import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
 
 /**
- * Exception launched when a mandatory method has not been implemented, usually for static methods that should been overrided
+ *
  * @author afarre
- * @since 1.0.0
  */
-public class NecessaryMethodNotImplemented extends RuntimeException{
+public class MandatoryArgumentNotProvided extends RuntimeException{
 	
-	private static final String MESSAGE="Necessary method {} not implemeted";
+	private static final String MESSAGE="Mandatory argument {} with prefix {} not provided.";
 	
 	/**
-	 * Necessary method not implemented exception constructor
-	 * @param _method method that should be implemented
+	 * Mandatory argument not provided exception constructor
+	 * @param _argument necessary argument not provided
 	 */
-	public NecessaryMethodNotImplemented(final String _method) {
-		super(SimpleFormat.format(MESSAGE, _method));	
-	}
-}
+	public MandatoryArgumentNotProvided(final Parameter _argument) {
+		super(SimpleFormat.format(MESSAGE, _argument.name(),_argument.prefix()));	
+	}}

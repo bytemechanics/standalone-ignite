@@ -15,22 +15,20 @@
  */
 package org.bytemechanics.standalone.ignite.exceptions;
 
-import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
-
 /**
- * Exception launched when a mandatory method has not been implemented, usually for static methods that should been overrided
+ * Exception caused by unexpected error during shutdown process
  * @author afarre
- * @since 1.0.0
  */
-public class NecessaryMethodNotImplemented extends RuntimeException{
+public class ShutdownSystemFailure extends RuntimeException{
 	
-	private static final String MESSAGE="Necessary method {} not implemeted";
+	private static final String MESSAGE="Shutdown system failure";
 	
 	/**
-	 * Necessary method not implemented exception constructor
-	 * @param _method method that should be implemented
+	 * Shutdown system failure exception constructor
+	 * @param _cause cause for the exception
 	 */
-	public NecessaryMethodNotImplemented(final String _method) {
-		super(SimpleFormat.format(MESSAGE, _method));	
+	public ShutdownSystemFailure(final Throwable _cause) {
+		super(MESSAGE,_cause);	
 	}
+
 }

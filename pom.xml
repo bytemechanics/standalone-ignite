@@ -39,6 +39,15 @@
 		<url>https://github.com/bytemechanics/standalone-ignite</url>
 	</scm>
 
+	<dependencies>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>1.16.20</version>
+			<scope>provided</scope>
+		</dependency>
+	</dependencies>
+
 	<build>
 		<plugins>
 			<plugin>
@@ -53,9 +62,10 @@
 						<configuration>
 							<copies>
 								<copy>
-									<artifact>${project.groupId}:copy-commons:1.1.0</artifact>
+									<artifact>${project.groupId}:copy-commons:1.3.0-SNAPSHOT</artifact>
 									<classes>
 										<class>org.bytemechanics.commons.string.GenericTextParser</class>
+										<class>org.bytemechanics.commons.string.SimpleFormat</class>
 										<class>org.bytemechanics.commons.functional.LambdaUnchecker</class>
 									</classes>
 									<fromPackage>org.bytemechanics.commons</fromPackage>
