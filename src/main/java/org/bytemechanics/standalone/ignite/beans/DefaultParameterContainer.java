@@ -19,9 +19,12 @@ import java.text.ParseException;
 import java.util.Optional;
 import java.util.function.Function;
 import lombok.Builder;
+import lombok.NonNull;
 import org.bytemechanics.standalone.ignite.Parameter;
 import org.bytemechanics.standalone.ignite.internal.commons.functional.LambdaUnchecker;
+import org.bytemechanics.standalone.ignite.internal.commons.reflection.PrimitiveTypeConverter;
 import org.bytemechanics.standalone.ignite.internal.commons.string.GenericTextParser;
+import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
 
 /**
  * Default implementation for parameter interface
@@ -31,51 +34,104 @@ import org.bytemechanics.standalone.ignite.internal.commons.string.GenericTextPa
 public class DefaultParameterContainer implements Parameter{
 
 	private final String name;
-	private final Class type;
+	private final String description;
+	private final String[] prefixes;
+	private final Class<? extends Object> type;
 	private final String defaultValue;
-	private final Function<String,Object> parserSupplier;
+	private final Function<String,Object> parser;
 	private Object value;
 
+	/**
+	 * Complete constructor for this container, preferably use the existent builder
+	 * @param name parameter name (mandatory)
+	 * @param type parameter class (mandatory)
+	 * @param description parameter description (mandatory)
+	 * @param parser parser supplier
+	 * @param defaultValue default value
+	 * @param prefixes prefixes available to use for this parameter
+	 */
 	@Builder
-	public  DefaultParameterContainer(final String name,final Class type,final Function<String,Object> parserSupplier,final String defaultValue) {
+	public  DefaultParameterContainer(final @NonNull String name,final @NonNull Class<? extends Object> type,final @NonNull String description,final Function<String,Object> parser,final String defaultValue,final String... prefixes) {
 		this.name = name;
-		this.type = type;
+		this.description=description;
+		this.type = PrimitiveTypeConverter.convert(type);
 		this.defaultValue=defaultValue;
-		this.parserSupplier=Optional.ofNullable(parserSupplier)
-										.orElseGet(() -> newParserSupplier(type));
+		this.parser=Optional.ofNullable(parser)
+										.orElseGet(() -> getDefaultParser((Class<Object>)this.type));
 		this.value=Optional.ofNullable(this.defaultValue)
-							.map(val -> parseParameter(val))
+							.map(this::parseParameter)
 							.orElse(null);
+		this.prefixes=Optional.ofNullable(prefixes)
+								.filter(prefix -> prefix.length>0)
+								.orElse(Parameter.super.getPrefixes());
 	}
 	
 	
-	
+	/**
+	 * Returns the default parser provider from the given class, this provider throws a ParseException if is not possible to parse the value
+	 * @param <T> type to parse
+	 * @param _type class to parse
+	 * @return Parser provider for the given class
+	 */
+	protected <T> Function<String,T> getDefaultParser(final Class<T> _type){
+		return LambdaUnchecker.uncheckedFunction(
+							string -> ((_type.isEnum())? GenericTextParser.toValue(_type, string,_type.getName()) : GenericTextParser.toValue(_type, string))
+										.orElseThrow(() -> {
+														return new ParseException(SimpleFormat.format("Unable to parse {} with generic parser",string),0);
+													}));
+	}
+
+	/**
+	 * @see Parameter#name() 
+	 */
 	@Override
 	public String name() {
 		return this.name;
 	}
 
+	/**
+	 * @see Parameter#getType() 
+	 */
 	@Override
 	public Class getType() {
 		return this.type;
 	}
 
-	protected <T> Function<String,T> newParserSupplier(final Class<T> _type){
-		return LambdaUnchecker.uncheckedFunction(
-									string -> ((_type.isEnum())? GenericTextParser.toValue(_type, string,_type.getName()) : GenericTextParser.toValue(_type, string))
-												.orElseThrow(() -> new ParseException("",0)));
+	/**
+	 * @see Parameter#getDescription() 
+	 */
+	@Override
+	public String getDescription() {
+		return this.description;
 	}
 	
+	/**
+	 * @see Parameter#getPrefixes() 
+	 */
 	@Override
-	public Function<String,Object> getParserSupplier() {
-		return (Function<String,Object>)this.parserSupplier;
+	public String[] getPrefixes() {
+		return this.prefixes;
 	}
 
+	/**
+	 * @see Parameter#getParser() 
+	 */
+	@Override
+	public Function<String,Object> getParser() {
+		return this.parser;
+	}
+
+	/**
+	 * @see Parameter#getValue() 
+	 */
 	@Override
 	public Optional<Object> getValue() {
 		return Optional.ofNullable(this.value);
 	}
 
+	/**
+	 * @see Parameter#setValue(java.lang.Object) 
+	 */
 	@Override
 	public Parameter setValue(Object _value) {
 		this.value=Optional.ofNullable(_value)
@@ -84,6 +140,9 @@ public class DefaultParameterContainer implements Parameter{
 		return this;
 	}
 
+	/**
+	 * @see Parameter#getDefaultValue() 
+	 */
 	@Override
 	public Optional<String> getDefaultValue() {
 		return Optional.ofNullable(this.defaultValue);

@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.bytemechanics</groupId>
 		<artifactId>bytemechanics-maven</artifactId>
-		<version>1.0.4</version>
+		<version>1.0.5</version>
 	</parent>
 	<artifactId>standalone-ignite</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
@@ -67,6 +67,7 @@
 										<class>org.bytemechanics.commons.string.GenericTextParser</class>
 										<class>org.bytemechanics.commons.string.SimpleFormat</class>
 										<class>org.bytemechanics.commons.functional.LambdaUnchecker</class>
+										<class>org.bytemechanics.commons.reflection.PrimitiveTypeConverter</class>
 									</classes>
 									<fromPackage>org.bytemechanics.commons</fromPackage>
 									<toPackage>org.bytemechanics.standalone.ignite.internal.commons</toPackage>

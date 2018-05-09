@@ -17,8 +17,11 @@ package org.bytemechanics.standalone.ignite;
 
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.bytemechanics.standalone.ignite.exceptions.MandatoryArgumentNotProvided;
+import org.bytemechanics.standalone.ignite.exceptions.UnparseableParameter;
+import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
 
 /**
  * Interface to implement the parameters definition
@@ -33,23 +36,41 @@ public interface Parameter {
 	 */
 	public String name();
 	/**
-	 * Retrieve the parameter prefix by default: -[name()]:
-	 * returns the parameter prefix
+	 * Retrieve the parameter prefixes, can have more than one (by default only: -[name()]:)
+	 * @return the parameter prefixes
 	 */
-	public default String prefix(){
-		return String.join("", "-",name(),":");
+	public default String[] getPrefixes(){
+		return new String[]{String.join("", "-",name().toLowerCase())};
 	}
+	/**
+	 * Retrieve the class of this parameter
+	 * @return the parameter class
+	 */
 	public Class getType(); 
 	/**
-	 * Returns the parser supplier
-	 * @return The supplier for the parser
+	 * Retrieve the parser to use
+	 * @return The parser to use
 	 */
-	public Function<String,Object> getParserSupplier();
+	public Function<String,Object> getParser();
 	/**
-	 * Returns the default value as string
+	 * Retrieve the default value as string
 	 * @return an optional with the default value as string
 	 */
 	public Optional<String> getDefaultValue();
+	/**
+	 * Retrieve mandatory flag for this parameter
+	 * @return the mandatory flag for this parameter (if defaultValue is not informed)
+	 */
+	public default boolean isMandatory(){
+		return !getDefaultValue().isPresent();
+	}
+	
+	/**
+	 * Returns the description for this parameter
+	 * @return returns the description of this parameter
+	 */
+	public String getDescription();
+
 	/**
 	 * Returns the current value
 	 * @return an optional of the current value
@@ -73,14 +94,16 @@ public interface Parameter {
 	public Parameter setValue(final Object _value);
 
 	/**
-	 * Look for the parameter into arguments filtering those parameters started with #prefix()
+	 * Look for the parameter into arguments filtering those parameters started with #getPrefix()
 	 * @param _args provided arguments
-	 * @return the value found without the prefix
+	 * @return the value found without the getPrefix
 	 */
 	public default String findParameter(final String... _args){
 		return Stream.of(_args)
-						.map(arg -> arg.toLowerCase())
-						.filter(arg -> arg.startsWith(this.prefix()))
+						.filter(arg -> Stream.of(getPrefixes())
+											.map(prefix -> prefix+":")
+											.anyMatch(prefix -> arg.startsWith(prefix)))
+						.map(value -> value.substring(value.indexOf(':')+1))
 						.findAny()
 						.orElseGet(() -> getDefaultValue()
 											.orElseThrow(() -> new MandatoryArgumentNotProvided(this)));
@@ -89,11 +112,40 @@ public interface Parameter {
 	 * Parse the provided value with the given parser supplier
 	 * @param _value value to parse
 	 * @return parsed value or the same value if no parser provided
+	 * @throws UnparseableParameter if can not be parsed
 	 */
 	public default Object parseParameter(final String _value){
-		return Optional.ofNullable(getParserSupplier())
-						.map(supplier -> supplier.apply(_value))
-						.orElse(_value);
+		try{
+			return Optional.ofNullable(getParser())
+							.map(supplier -> supplier.apply(_value))
+							.orElse(_value);
+		}catch(Exception e){
+			throw new UnparseableParameter(this, _value, e);
+		}
+	}
+
+	/**
+	 * Search into arguments the parameter, parse and assign as value
+	 * @param _args arguments where search the parameter
+	 */
+	public default void loadParameter(final String... _args){
+		Optional.ofNullable(findParameter(_args))
+						.map(this::parseParameter)
+						.ifPresent(this::setValue);
+	}
+
+	/**
+	 * Returns default help for this parameter
+	 * @return default help
+	 */
+	public default String getHelp(){
+		return SimpleFormat.format("[{}]: {} ({})"
+												,Stream.of(getPrefixes())
+													.collect(Collectors.joining(", "))
+												,getDescription()
+												,getDefaultValue()
+														.map(def -> String.join(": ", "Default",def))
+														.orElse("Mandatory"));
 	}
 	
 	/**
@@ -102,13 +154,22 @@ public interface Parameter {
 	 * @param _parameters parameters enumeration class
 	 * @param _args Arguments from the command line execution
 	 */
-	public static <P extends Parameter> void parseParameters(final Class<P> _parameters,final String... _args){
+	public static <P extends Enum & Parameter> void parseParameters(final Class<P> _parameters,final String... _args){
 
-		for(Parameter param:_parameters.getEnumConstants()){
-			Optional.ofNullable(param.findParameter(_args))
-						.map(value -> value.substring(param.prefix().length()))
-						.map(value -> param.parseParameter(value))
-						.ifPresent(object -> param.setValue(object));
-		}
+		Stream.of(_parameters.getEnumConstants())
+					.forEach(param -> param.loadParameter(_args));
+	} 
+
+	/**
+	 * Returns the default help for all parameters of the given parameter class
+	 * @param <P> type of the parameters enumeration
+	 * @param _parameters parameters enumeration class
+	 * @return returns the list of 
+	 */
+	public static <P extends Enum & Parameter> String getHelp(final Class<P> _parameters){
+
+		return Stream.of(_parameters.getEnumConstants())
+							.map(param -> param.getHelp())
+							.collect(Collectors.joining("\n\t","Usage:\n\t","\n"));
 	} 
 }

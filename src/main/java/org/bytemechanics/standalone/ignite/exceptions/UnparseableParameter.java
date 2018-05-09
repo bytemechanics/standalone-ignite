@@ -15,8 +15,6 @@
  */
 package org.bytemechanics.standalone.ignite.exceptions;
 
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.bytemechanics.standalone.ignite.Parameter;
 import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
 
@@ -24,17 +22,17 @@ import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
  *
  * @author afarre
  */
-public class MandatoryArgumentNotProvided extends RuntimeException{
+public class UnparseableParameter extends RuntimeException{
 	
-	private static final String MESSAGE="Mandatory argument {} not provided with anyone of its available prefixes: {}";
+	private static final String MESSAGE="Unparseable parameter {} with value: {}";
 	
 	/**
 	 * Mandatory argument not provided exception constructor
 	 * @param _argument necessary argument not provided
+	 * @param _value value
+	 * @param _cause exception cause
 	 */
-	public MandatoryArgumentNotProvided(final Parameter _argument) {
-		super(SimpleFormat.format(MESSAGE, _argument.name(),Stream.of(_argument.getPrefixes())
-																	.map(prefix -> String.valueOf(prefix)+":")
-																	.collect(Collectors.toList())));	
+	public UnparseableParameter(final Parameter _argument,final String _value,final Throwable _cause) {
+		super(SimpleFormat.format(MESSAGE, _argument.name(),_value),_cause);	
 	}
 }

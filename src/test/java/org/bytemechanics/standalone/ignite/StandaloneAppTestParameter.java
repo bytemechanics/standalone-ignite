@@ -25,28 +25,29 @@ import org.bytemechanics.standalone.ignite.beans.DefaultParameterContainer;
  */
 public enum StandaloneAppTestParameter implements Parameter{
 
-	BOOLEANVALUE(boolean.class),
-	INTVALUE(int.class),
-	LONGVALUE(long.class),
-	FLOATVALUE(float.class),
-	DOUBLEVALUE(double.class),
-	STRINGVALUE(String.class),
+	BOOLEANVALUE(boolean.class,"boolean value"),
+	INTVALUE(int.class,"int value"),
+	LONGVALUE(long.class,"long value"),
+	FLOATVALUE(float.class,"float value"),
+	DOUBLEVALUE(double.class,"double value"),
+	STRINGVALUE(String.class,"string value"),
 	;
 	
 	private final DefaultParameterContainer container;
 	
-	<T extends Object> StandaloneAppTestParameter(final Class<T> _type){
-		this(_type,null,null);
+	<T extends Object> StandaloneAppTestParameter(final Class<T> _type,final String _description){
+		this(_type,_description,null,null);
 	}
-	<T extends Object> StandaloneAppTestParameter(final Class<T> _type,final String _default){
-		this(_type,_default,null);
+	<T extends Object> StandaloneAppTestParameter(final Class<T> _type,final String _description,final String _default){
+		this(_type,_description,_default,null);
 	}
-	<T extends Object> StandaloneAppTestParameter(final Class<T> _type,final String _default,final Function<String,T> _parserSupplier){
+	<T extends Object> StandaloneAppTestParameter(final Class<T> _type,final String _description,final String _default,final Function<String,T> _parser){
 		this.container=DefaultParameterContainer.builder()
-												.parserSupplier((Function<String,Object>)_parserSupplier)
 												.name(name())
 												.type(_type)
+												.description(_description)
 												.defaultValue(_default)
+												.parser((Function<String,Object>)_parser)
 											.build();
 	}
 
@@ -56,8 +57,8 @@ public enum StandaloneAppTestParameter implements Parameter{
 	}
 
 	@Override
-	public Function<String, Object> getParserSupplier() {
-		return this.container.getParserSupplier();
+	public Function<String, Object> getParser() {
+		return this.container.getParser();
 	}
 
 	@Override
@@ -73,5 +74,10 @@ public enum StandaloneAppTestParameter implements Parameter{
 	@Override
 	public Optional<String> getDefaultValue() {
 		return this.container.getDefaultValue();
+	}
+
+	@Override
+	public String getDescription() {
+		return this.container.getDescription();
 	}
 }

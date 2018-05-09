@@ -21,12 +21,17 @@ import spock.lang.Unroll
 
 import java.util.function.*
 import java.text.*
+import java.net.*
 import java.io.*
-import java.io.*
+import java.nio.file.*
 import java.util.logging.*
 import java.time.*
 import java.time.format.*
+import org.bytemechanics.standalone.ignite.internal.commons.reflection.PrimitiveTypeConverter;
 import org.bytemechanics.standalone.ignite.internal.commons.string.*
+import org.bytemechanics.standalone.ignite.exceptions.MandatoryArgumentNotProvided
+import org.bytemechanics.standalone.ignite.exceptions.UnparseableParameter
+import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat
 
 /**
  * @author afarre
@@ -47,16 +52,99 @@ class DefaultParameterContainerSpec extends Specification{
 		}
 	}
 	
+	def "Builder must throw NullPointerException if no name is provided"(){
+		println(">>>>> DefaultParameterContainerSpec >>>> Builder must throw NullPointerException if no name is provided")
+		when:
+			def DefaultParameterContainer container=DefaultParameterContainer.builder()
+																				.type(boolean.class)
+																				.description("")
+																			.build()
+
+		then:
+			def e=thrown(NullPointerException) 
+			e.getMessage()=="name"
+
+	}
+	def "Builder must throw NullPointerException if no type is provided"(){
+		println(">>>>> DefaultParameterContainerSpec >>>> Builder must throw NullPointerException if no type is provided")
+		when:
+			def DefaultParameterContainer container=DefaultParameterContainer.builder()
+																				.name("name")
+																				.description("")
+																			.build()
+
+		then:
+			def e=thrown(NullPointerException) 
+			e.getMessage()=="type"
+
+	}
+	def "Builder must throw NullPointerException if no description is provided"(){
+		println(">>>>> DefaultParameterContainerSpec >>>> Builder must throw NullPointerException if no type is provided")
+		when:
+			def DefaultParameterContainer container=DefaultParameterContainer.builder()
+																				.type(boolean.class)
+																				.name("name")
+																			.build()
+
+		then:
+			def e=thrown(NullPointerException) 
+			e.getMessage()=="description"
+
+	}
+	def "Constructor must throw NullPointerException if no name is provided"(){
+		println(">>>>> DefaultParameterContainerSpec >>>> Constructor must throw NullPointerException if no name is provided")
+		when:
+			def DefaultParameterContainer container=new DefaultParameterContainer(null,boolean.class,"",null,null);
+
+		then:
+			def e=thrown(NullPointerException) 
+			e.getMessage()=="name"
+
+	}
+	def "Constructor must throw NullPointerException if no type is provided"(){
+		println(">>>>> DefaultParameterContainerSpec >>>> Constructor must throw NullPointerException if no type is provided")
+		when:
+			def DefaultParameterContainer container=new DefaultParameterContainer("name",null,"",null,null);
+
+		then:
+			def e=thrown(NullPointerException) 
+			e.getMessage()=="type"
+
+	}
+	def "Constructor must throw NullPointerException if no description is provided"(){
+		println(">>>>> DefaultParameterContainerSpec >>>> Constructor must throw NullPointerException if no type is provided")
+		when:
+			def DefaultParameterContainer container=new DefaultParameterContainer("name",boolean.class,null,null,null);
+
+		then:
+			def e=thrown(NullPointerException) 
+			e.getMessage()=="description"
+
+	}
+	def "Constructor with name and type must be created without problem being mandatory"(){
+		println(">>>>> DefaultParameterContainerSpec >>>> Constructor with name and type must be created without problem being mandatory")
+		when:
+			def DefaultParameterContainer container=new DefaultParameterContainer("name",boolean.class,"description",null,null);
+
+		then:
+			container.isMandatory()
+			container.name()=="name"
+			container.getType()==Boolean.class
+			container.getDescription()=="description"
+			container.getHelp()=="[-name]: description (Mandatory)"
+
+	}
+	
 	@Unroll
 	def "When new instance created with name:#name,type:#type,parser:null and defaultValue:#defaultValue then the value stored should be the default #parsed one"(){
 		println(">>>>> DefaultParameterContainerSpec >>>> When new instance created with name:$name,type:$type,parser:null and defaultValue:$defaultValue the value stored should be the default $parsed one")
 		when:
-			DefaultParameterContainer container=new DefaultParameterContainer(name,type,null,defaultValue)
+			DefaultParameterContainer container=new DefaultParameterContainer(name,type,"description",null,defaultValue)
 
 		then: 
 			container.name()==name
-			container.getType()==type
-			container.getParserSupplier()!=null
+			container.getType()==typeLoaded
+			container.getParser()!=null
 			container.getDefaultValue().isPresent()
 			container.getDefaultValue().get()==defaultValue
 			container.getValue().isPresent()
@@ -120,18 +208,20 @@ class DefaultParameterContainerSpec extends Specification{
 			"LocalDAte-2007-12-03T10:15:30"		| LocalDateTime.class		| "2007-12-03T10:15:30"					| LocalDateTime.parse("2007-12-03T10:15:30")				
 			"enum-genericTextParser-ENUM"		| GenericTextParser.class	| "ENUM"								| GenericTextParser.ENUM									
 			"enum-genericTextParser-LOCALDATE"	| GenericTextParser.class	| "LOCALDATE"							| GenericTextParser.LOCALDATE								
+			
+			typeLoaded=PrimitiveTypeConverter.convert(type)
 	}
 	
 	@Unroll
 	def "When new instance created with name:#name,type:#type,parser:null and no default value then when retrieve value should return null"(){
 		println(">>>>> DefaultParameterContainerSpec >>>> When new instance created with name:$name,type:$type,parser:null and no default value then when retrieve value should return null")
 		when:
-			DefaultParameterContainer container=new DefaultParameterContainer(name,type,null,null)
+			DefaultParameterContainer container=new DefaultParameterContainer(name,type,"description",null,null)
 
 		then: 
 			container.name()==name
-			container.getType()==type
-			container.getParserSupplier()!=null
+			container.getType()==typeLoaded
+			container.getParser()!=null
 			!container.getDefaultValue().isPresent()
 			!container.getValue().isPresent()
 
@@ -193,6 +283,8 @@ class DefaultParameterContainerSpec extends Specification{
 			"LocalDAte-2007-12-03T10:15:30"		| LocalDateTime.class		
 			"enum-genericTextParser-ENUM"		| GenericTextParser.class	
 			"enum-genericTextParser-LOCALDATE"	| GenericTextParser.class	
+
+			typeLoaded=PrimitiveTypeConverter.convert(type)
 	}
 
 	@Unroll
@@ -202,7 +294,8 @@ class DefaultParameterContainerSpec extends Specification{
 			DefaultParameterContainer container=DefaultParameterContainer.builder()
 																			.name(defaultValue)
 																			.type(boolean.class)
-																			.parserSupplier(parser)
+																			.description("description")
+																			.parser(parser)
 																			.defaultValue(defaultValue)
 																		.build()
 
@@ -220,6 +313,136 @@ class DefaultParameterContainerSpec extends Specification{
  			"Yes"			| true		| {value -> ("yes".equalsIgnoreCase((String)value))? true : false }		
  			"yES"			| true		| {value -> ("yes".equalsIgnoreCase((String)value))? true : false }		
  			"other"			| false		| {value -> ("yes".equalsIgnoreCase((String)value))? true : false }		
+	}
+
+	@Unroll
+	def "Search #name,#description with #defaultValue default into #arguments must return #value"(){
+		println(">>>>> DefaultParameterContainerSpec >>>> Search $name,$description with $defaultValue default into $arguments must return $value")
+		when:
+			DefaultParameterContainer container=DefaultParameterContainer.builder()
+																			.name(name)
+																			.type(boolean.class)
+																			.description(description)
+																			.defaultValue(defaultValue)
+																		.build()
+
+		then: 
+			container.findParameter(arguments)==value
+			container.getDescription()==description
+			container.getHelp()=="[-"+name+"]: "+description+" ("+mandatory+")"
+
+		where:
+			name	| defaultValue	| value				| description	 | mandatory
+			"server"| null			| "other.com"		| "description1" | "Mandatory" 
+			"port"	| null			| "2234"			| "description2" | "Mandatory" 
+			"ip"	| "212.12.0.21"	| "212.12.0.21"		| "description3" | "Default: 212.12.0.21" 
+			"name"	| "myname"		| "standalone"		| "description4" | "Default: myname" 
+			"path"	| "/etc/bin"	| "/etc/bin"		| "description5" | "Default: /etc/bin" 
+															
+			arguments=["-server:other.com","-port:2234","-name:standalone"].toArray(new String[3])
+	}
+	
+	@Unroll
+	def "Search #name with customPrefixes #prefixes and #defaultValue default into #arguments must return #value"(){
+		println(">>>>> DefaultParameterContainerSpec >>>> Search $name with customPrefixes $prefixes and $defaultValue default into $arguments must return $value")
+		when:
+			DefaultParameterContainer container=DefaultParameterContainer.builder()
+																			.name(name)
+																			.prefixes(prefixes)
+																			.type(boolean.class)
+																			.description("description")
+																			.defaultValue(defaultValue)
+																		.build()
+
+		then: 
+			container.findParameter(arguments)==value
+
+		where:
+			name	| defaultValue	| value			| prefixes
+			"server"| null			| "other.com"	| null
+			"port"	| null			| "2234"		| null
+			"ip"	| "212.12.0.21"	| "212.12.0.21"	| ["-i","-ip"].toArray(new String[2])
+			"name"	| "myname"		| "standalone"	| ["-n","-name"].toArray(new String[2])
+			"path"	| "/etc/bin"	| "/home/user"	| ["-p","-path"].toArray(new String[2])
+															
+			arguments=["-server:other.com","-port:2234","-name:standalone","-p:/home/user"].toArray(new String[4])
+	}
+
+	@Unroll
+	def "Search #name with customPrefixes #prefixes and without defaultValue into #arguments must throw MandatoryArgumentNotProvided exception"(){
+		println(">>>>> DefaultParameterContainerSpec >>>> Search $name with customPrefixes $prefixes and without defaultValue into $arguments must throw MandatoryArgumentNotProvided exception")
+		when:
+			def DefaultParameterContainer container=DefaultParameterContainer.builder()
+																				.name(name)
+																				.type(boolean.class)
+																				.description("description")
+																				.prefixes(prefixes)
+																			.build()
+			container.findParameter(arguments)
+
+		then: 
+			def e=thrown(MandatoryArgumentNotProvided) 
+			e.getMessage()==new MandatoryArgumentNotProvided(container).getMessage()
+
+		where:
+			name		| prefixes
+			"ip"		| null
+			"path"		| ["-p","-path"].toArray(new String[2])
+			"server"	| ["-s"].toArray(new String[1])
+																				
+			arguments=["-server:other.com","-port:2234","-name:standalone"].toArray(new String[3])
+	}
+																			
+	@Unroll
+	def "Load #name with type:#type,customPrefixes:#prefixes,defaultValue:#defaultValue and parser:#parser from #arguments must load #value"(){
+		println(">>>>> DefaultParameterContainerSpec >>>> Load $name with type:$type,customPrefixes:$prefixes,defaultValue:$defaultValue and parser:$parser from $arguments must load $value")
+		when:
+			DefaultParameterContainer container=DefaultParameterContainer.builder()
+																			.name(name)
+																			.prefixes(prefixes)
+																			.description("description")
+																			.type(type)
+																			.defaultValue(defaultValue)
+																			.parser(parser)
+																		.build()
+			container.loadParameter(arguments)
+		then: 
+			container.getValue().isPresent()
+			container.getValue().get()==value
+
+		where:
+			name	| type				| defaultValue				| value									| prefixes								| parser
+			"server"| String.class		| null						| "other.com"							| null									| null
+			"port"	| int.class			| null						| 2234									| null									| null
+			"ip"	| String.class		| "212.12.0.21"				| "212.12.0.21"							| ["-i","-ip"].toArray(new String[2])	| null
+			"name"	| String.class		| "myname"					| "standalone"							| ["-n","-name"].toArray(new String[2])	| null
+			"path"	| Path.class		| "/etc/bin"				| Paths.get("/home/user")				| ["-p","-path"].toArray(new String[2])	| null
+			"url"	| boolean.class		| "yes"						| true									| ["-u","-url"].toArray(new String[2])	| {value -> ("yes".equalsIgnoreCase((String)value))? true : false }	
+															
+			arguments=["-server:other.com","-port:2234","-name:standalone","-p:/home/user"].toArray(new String[4])
+	}
+
+	@Unroll
+	def "Try to load #name with type:#type from #arguments must raise exception"(){
+		println(">>>>> DefaultParameterContainerSpec >>>> Try to load $name with type:$type from $arguments must raise exception")
+		when:
+			def container=DefaultParameterContainer.builder()
+														.name(name)
+														.type(type)
+														.description("description")
+													.build()
+			container.loadParameter(arguments)
+		then: 
+			def e=thrown(UnparseableParameter.class)
+			e.getMessage()==new UnparseableParameter(container,extractedValue,null).getMessage()
+
+		where:
+			name	| type						| extractedValue	
+			"port"	| int.class					| "22.34"
+			"ip"	| float.class				| "other.com"
+			"path"	| GenericTextParser.class	| "/home/user"		
+															
+			arguments=["-ip:other.com","-port:22.34","-name:standalone","-path:/home/user"].toArray(new String[4])
 	}
 }
 
