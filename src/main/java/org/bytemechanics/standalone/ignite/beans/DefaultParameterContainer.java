@@ -76,9 +76,7 @@ public class DefaultParameterContainer implements Parameter{
 	protected <T> Function<String,T> getDefaultParser(final Class<T> _type){
 		return LambdaUnchecker.uncheckedFunction(
 							string -> ((_type.isEnum())? GenericTextParser.toValue(_type, string,_type.getName()) : GenericTextParser.toValue(_type, string))
-										.orElseThrow(() -> {
-														return new ParseException(SimpleFormat.format("Unable to parse {} with generic parser",string),0);
-													}));
+										.orElseThrow(() -> new ParseException(SimpleFormat.format("Unable to parse {} with generic parser",string),0)));
 	}
 
 	/**

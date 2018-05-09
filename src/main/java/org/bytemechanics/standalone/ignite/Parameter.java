@@ -102,7 +102,7 @@ public interface Parameter {
 		return Stream.of(_args)
 						.filter(arg -> Stream.of(getPrefixes())
 											.map(prefix -> prefix+":")
-											.anyMatch(prefix -> arg.startsWith(prefix)))
+											.anyMatch(arg::startsWith))
 						.map(value -> value.substring(value.indexOf(':')+1))
 						.findAny()
 						.orElseGet(() -> getDefaultValue()
