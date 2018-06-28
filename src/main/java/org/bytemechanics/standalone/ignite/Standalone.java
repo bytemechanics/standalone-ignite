@@ -16,110 +16,125 @@
 package org.bytemechanics.standalone.ignite;
 
 import java.io.Closeable;
-import java.io.IOException;
 import java.util.Optional;
 import java.util.function.Supplier;
-import org.bytemechanics.standalone.ignite.exceptions.ShutdownSystemFailure;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NonNull;
 
 /**
- * Basic interface to provide a startup and shutdown hooks to avoid boilerplate
+ * Standalone configuration container
  * @author afarre
- * @since 1.0.0
+ * @param <P> parameters class type
  */
-public interface Standalone {
+@Data
+@Builder
+public class Standalone<P extends Enum & Parameter> implements Runnable{
+	
+	/** supplier for standalone implementation. MANDATORY*/
+	@NonNull
+	private final Supplier<? extends Ignitable> supplier;
+	/** parameters enumeration class. OPTIONAL */
+	private final Class<P> parameters;
+	/** Arguments from the command line execution. OPTIONAL */
+	@Builder.Default
+	private final String[] arguments=new String[0];
+	/** daemon flag, the main class has an infinite loop, therefore close method won't be called after right after startup. OPTIONAL (default false)*/
+	private final boolean daemon;
+	@Builder.Default
+	/** Internal ignitable instance */
+	private Ignitable instance=null;
+	
+	
+	protected Standalone instantiate(){
+		this.instance=Optional.ofNullable(this.supplier)
+								.map(Supplier::get)
+								.orElseThrow(() -> new NullPointerException("Supplier can not be null and must provide a not null instance"));
+		return this;
+	}
+	
 
 	/**
 	 * Override this method to implement special tasks for startup
 	 * If this instance implements Runnable, then the default implementation will call Runnable::run
-	 * @return The same instance
+	 * @return itself
 	 * @see Runnable
 	 */
-	public default Standalone startup(){
-		if(this instanceof Runnable){
-			((Runnable)this).run();
-		}
+	protected Standalone startup(){
+		Optional.ofNullable(this.instance)
+					.map(Ignitable::beforeStartup)
+					.map(Ignitable::startup)
+					.ifPresent(Ignitable::afterStartup);
 		return this;
 	}
 
 	/**
 	 * Override this method to implement special tasks for graceful shutdown
 	 * If this instance implements Closeable, then the default implementation will call Closeable::close
-	 * @return The same instance
+	 * @return itself
 	 * @see Closeable
 	 */
-	public default Standalone shutdown(){
-		if(this instanceof Closeable){
-			try {
-				((Closeable)this).close();
-			} catch (IOException e) {
-				throw new ShutdownSystemFailure(e);
-			}
-		}
+	protected Standalone shutdown(){
+		Optional.ofNullable(this.instance)
+					.map(Ignitable::beforeShutdown)
+					.map(Ignitable::shutdown)
+					.ifPresent(Ignitable::afterShutdown);
 		return this;
 	}
 	
 	/**
 	 * Parse all given parameters and stores in the parameter enumeration
-	 * @param <T> type of the supplied Standalone implementation instance
-	 * @param <P> type of the parameters enumeration
-	 * @param _instance instance of Standalone implementation
-	 * @param _parameters parameters enumeration class
-	 * @param _args Arguments from the command line execution
-	 * @return The same instance provided
+	 * @return itself
 	 */
-	public static <T extends Standalone,P extends Enum<? extends Parameter>> T parseParameters(final T _instance,final Class<P> _parameters,final String... _args){
+	protected Standalone parseParameters(){
 		
-		return _instance;
+		Optional.ofNullable(this.parameters)
+					.ifPresent(par -> Parameter.parseParameters(par, arguments));
+		return this;
 	} 
 	
 	/**
 	 * Registers the shutdown hook to perform a graceful shutdown by calling the Standalone::shudtdown method
-	 * @param <T> type of the Standalone implementation provided
-	 * @param _instance instance of Standalone implementation
 	 * @return The same instance provided
 	 */
-	public static <T extends Standalone> T addShutdownHook(final T _instance){
+	protected Standalone addShutdownHook(){
+		
+		final Standalone self=this;
 		Runtime
 			.getRuntime()
-				.addShutdownHook(new Thread() {
-									@Override
-									public void run(){ 
-										try{			
-											_instance.shutdown();
-										}catch(Throwable e){
-											e.printStackTrace();
-										}
-									}
-								});
+				.addShutdownHook(new Thread(this));
 		
-		return _instance;
+		return self;
 	} 
 	
 	/**
-	 * Call this method to ignite the standalone application
-	 * @param <T> type of the supplied Standalone implementation instance
-	 * @param _supplier supplier for standalone implementation
-	 * @param _args Arguments from the command line execution
+	 * Call this method to ignite the standalone application this method will:
+	 * <ul>
+	 *   <li>Get standalone instance</li>
+	 *   <li>Register shutdown hook</li>
+	 *   <li>Call startup</li>
+	 *   <li>Call shutdown (if daemon is false)</li>
+	 * </ul>
+	 * @see Standalone
 	 */
-	public static <T extends Standalone> void ignite(final Supplier<T> _supplier,final String... _args){
-		ignite(_supplier, null, _args);
+	public void ignite(){
+		
+		Optional.of(this)
+				.map(Standalone::instantiate)
+				.map(Standalone::addShutdownHook)
+				.map(Standalone::parseParameters)
+				.map(Standalone::startup)
+				.map(config -> (!config.isDaemon())? config.shutdown() : config)
+				.orElseThrow(() -> new NullPointerException("_configuration can not be null"));
+
 	}
 
-	/**
-	 * Call this method to ignite the standalone application
-	 * @param <T> type of the supplied Standalone implementation instance
-	 * @param <P> type of the parameters enumeration
-	 * @param _supplier supplier for standalone implementation
-	 * @param _parameters parameters enumeration class
-	 * @param _args Arguments from the command line execution
-	 */
-	public static <T extends Standalone,P extends Enum<? extends Parameter>> void ignite(final Supplier<T> _supplier,final Class<P> _parameters,final String... _args){
-		
-		Optional.ofNullable(_supplier)
-						.map(Supplier::get)
-						.map(Standalone::addShutdownHook)
-						.map(standalone -> Standalone.parseParameters(standalone, _parameters, _args))
-						.map(Standalone::startup)
-						.orElseThrow(() -> new NullPointerException("_supplier can not be null and must provide a not null instance"));
+	@Override
+	public void run() {
+		try{
+			this.instance.shutdown();
+		}catch(Throwable e){
+			e.printStackTrace();
+		}
 	}
 }
