@@ -18,20 +18,15 @@ package org.bytemechanics.standalone.ignite;
 import java.io.Closeable;
 import java.util.Optional;
 import java.util.function.Supplier;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NonNull;
 import org.bytemechanics.standalone.ignite.exceptions.MandatoryArgumentNotProvided;
 
 /**
  * Standalone configuration container
  * @author afarre
  */
-@Data
 public class Standalone{
 	
 	/** supplier for standalone implementation. MANDATORY*/
-	@NonNull
 	private final Supplier<? extends Ignitable> supplier;
 	/** parameters enumeration class. OPTIONAL */
 	private final Class<? extends Enum<? extends Parameter>> parameters;
@@ -40,8 +35,9 @@ public class Standalone{
 	/** Internal ignitable instance */
 	private Ignitable instance;
 
-	@Builder
 	public Standalone(final Supplier<? extends Ignitable> supplier,final Class<? extends Enum<? extends Parameter>> parameters,final String[] arguments){
+		if(supplier==null)
+			throw new NullPointerException("Mandatory \"supplier\" can not be null");
 		this.supplier=supplier;
 		this.arguments=((arguments==null)||arguments.length==0)? new String[0] : arguments;
 		this.parameters=parameters;
@@ -198,5 +194,84 @@ public class Standalone{
 			System.out.println(e.getMessage());
 			System.out.println(Parameter.getHelp(this.parameters));
 		}
+	}
+
+
+	/**
+	 * Supplier for standalone implementation. MANDATORY
+	 * @return supplier for standalone implementation. MANDATORY
+	 */
+	protected Supplier<? extends Ignitable> getSupplier() {
+		return this.supplier;
+	}
+	/**
+	 * Parameters enumeration class. OPTIONAL
+	 * @return parameters enumeration class. OPTIONAL
+	 */
+	public Class<? extends Enum<? extends Parameter>> getParameters() {
+		return this.parameters;
+	}
+	/**
+	 * Arguments from the command line execution. OPTIONAL
+	 * @return arguments from the command line execution. OPTIONAL
+	 */
+	public String[] getArguments() {
+		return this.arguments;
+	}
+	/**
+	 * Internal ignitable instance
+	 * @return internal ignitable instance
+	 */
+	protected Ignitable getInstance() {
+		return this.instance;
+	}
+
+
+	@java.lang.SuppressWarnings("all")
+	public static class StandaloneBuilder {
+		
+		@java.lang.SuppressWarnings("all")
+		private Supplier<? extends Ignitable> supplier;
+		@java.lang.SuppressWarnings("all")
+		private Class<? extends Enum<? extends Parameter>> parameters;
+		@java.lang.SuppressWarnings("all")
+		private String[] arguments;
+
+		@java.lang.SuppressWarnings("all")
+		public StandaloneBuilder supplier(final Supplier<? extends Ignitable> supplier) {
+			this.supplier = supplier;
+			return this;
+		}
+
+		@java.lang.SuppressWarnings("all")
+		public StandaloneBuilder parameters(final Class<? extends Enum<? extends Parameter>> parameters) {
+			this.parameters = parameters;
+			return this;
+		}
+
+		@java.lang.SuppressWarnings("all")
+		public StandaloneBuilder arguments(final String[] arguments) {
+			this.arguments = arguments;
+			return this;
+		}
+
+		@java.lang.SuppressWarnings("all")
+		public Standalone build() {
+			return new Standalone(supplier, parameters, arguments);
+		}
+
+		@java.lang.Override
+		@java.lang.SuppressWarnings("all")
+		public java.lang.String toString() {
+			return "Standalone.StandaloneBuilder(supplier=" + this.supplier + ", parameters=" + this.parameters + ", arguments=" + java.util.Arrays.deepToString(this.arguments) + ")";
+		}
+	}
+
+	/**
+	 * Returns Standalone instance builder
+	 * @return standalone builder
+	 */
+	public static StandaloneBuilder builder() {
+		return new StandaloneBuilder();
 	}
 }

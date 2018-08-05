@@ -18,8 +18,6 @@ package org.bytemechanics.standalone.ignite.beans;
 import java.text.ParseException;
 import java.util.Optional;
 import java.util.function.Function;
-import lombok.Builder;
-import lombok.NonNull;
 import org.bytemechanics.standalone.ignite.Parameter;
 import org.bytemechanics.standalone.ignite.internal.commons.functional.LambdaUnchecker;
 import org.bytemechanics.standalone.ignite.internal.commons.reflection.PrimitiveTypeConverter;
@@ -50,11 +48,17 @@ public class DefaultParameterContainer implements Parameter{
 	 * @param defaultValue default value
 	 * @param prefixes prefixes available to use for this parameter
 	 */
-	@Builder
-	public  DefaultParameterContainer(final @NonNull String name,final @NonNull Class<? extends Object> type,final @NonNull String description,final Function<String,Object> parser,final String defaultValue,final String... prefixes) {
+	public  DefaultParameterContainer(final String name,final Class<? extends Object> type,final String description,final Function<String,Object> parser,final String defaultValue,final String... prefixes) {
+		if(name==null)
+			throw new NullPointerException("Mandatory \"name\" can not be null");
 		this.name = name;
+		if(description==null)
+			throw new NullPointerException("Mandatory \"description\" can not be null");
 		this.description=description;
-		this.type = PrimitiveTypeConverter.convert(type);
+		if(type==null)
+			throw new NullPointerException("Mandatory \"type\" can not be null");
+		this.type = PrimitiveTypeConverter
+								.convert(type);
 		this.defaultValue=defaultValue;
 		this.parser=Optional.ofNullable(parser)
 										.orElseGet(() -> getDefaultParser((Class<Object>)this.type));
@@ -145,5 +149,77 @@ public class DefaultParameterContainer implements Parameter{
 	public Optional<String> getDefaultValue() {
 		return Optional.ofNullable(this.defaultValue);
 	}
-	
+
+
+	@java.lang.SuppressWarnings("all")
+	public static class DefaultParameterContainerBuilder {
+		@java.lang.SuppressWarnings("all")
+		private String name;
+		@java.lang.SuppressWarnings("all")
+		private Class<? extends Object> type;
+		@java.lang.SuppressWarnings("all")
+		private String description;
+		@java.lang.SuppressWarnings("all")
+		private Function<String, Object> parser;
+		@java.lang.SuppressWarnings("all")
+		private String defaultValue;
+		@java.lang.SuppressWarnings("all")
+		private String[] prefixes;
+
+		@java.lang.SuppressWarnings("all")
+		DefaultParameterContainerBuilder() {
+		}
+
+		@java.lang.SuppressWarnings("all")
+		public DefaultParameterContainerBuilder name(final String name) {
+			this.name = name;
+			return this;
+		}
+
+		@java.lang.SuppressWarnings("all")
+		public DefaultParameterContainerBuilder type(final Class<? extends Object> type) {
+			this.type = type;
+			return this;
+		}
+
+		@java.lang.SuppressWarnings("all")
+		public DefaultParameterContainerBuilder description(final String description) {
+			this.description = description;
+			return this;
+		}
+
+		@java.lang.SuppressWarnings("all")
+		public DefaultParameterContainerBuilder parser(final Function<String, Object> parser) {
+			this.parser = parser;
+			return this;
+		}
+
+		@java.lang.SuppressWarnings("all")
+		public DefaultParameterContainerBuilder defaultValue(final String defaultValue) {
+			this.defaultValue = defaultValue;
+			return this;
+		}
+
+		@java.lang.SuppressWarnings("all")
+		public DefaultParameterContainerBuilder prefixes(final String[] prefixes) {
+			this.prefixes = prefixes;
+			return this;
+		}
+
+		@java.lang.SuppressWarnings("all")
+		public DefaultParameterContainer build() {
+			return new DefaultParameterContainer(name, type, description, parser, defaultValue, prefixes);
+		}
+
+		@java.lang.Override
+		@java.lang.SuppressWarnings("all")
+		public java.lang.String toString() {
+			return "DefaultParameterContainer.DefaultParameterContainerBuilder(name=" + this.name + ", type=" + this.type + ", description=" + this.description + ", parser=" + this.parser + ", defaultValue=" + this.defaultValue + ", prefixes=" + java.util.Arrays.deepToString(this.prefixes) + ")";
+		}
+	}
+
+	@java.lang.SuppressWarnings("all")
+	public static DefaultParameterContainerBuilder builder() {
+		return new DefaultParameterContainerBuilder();
+	}	
 }

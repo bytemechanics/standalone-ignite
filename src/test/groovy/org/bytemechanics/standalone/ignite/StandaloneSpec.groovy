@@ -42,6 +42,22 @@ class StandaloneSpec extends Specification{
 	}
 	
 	@Unroll
+	def "When supplier is not provided a NullPointerException is raised"(){
+		println(">>>>> StandaloneSpec >>>> When supplier is not provided a NullPointerException is raised")
+		setup:
+			Ignitable ignitable=Mock()
+		
+		when:
+			Standalone.builder()
+						.build()
+							.ignite()
+
+		then: 
+			def e=thrown(NullPointerException) 
+			e.getMessage()=="Mandatory \"supplier\" can not be null"
+	}
+	
+	@Unroll
 	def "Ignite call should call ignitable startup (before and after)"(){
 		println(">>>>> StandaloneSpec >>>> Ignite call should call startup (before and after)")
 		setup:
