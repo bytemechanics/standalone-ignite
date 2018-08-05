@@ -7,7 +7,7 @@
 		<version>1.0.6</version>
 	</parent>
 	<artifactId>standalone-ignite</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>Standalone Ignite</name>
 	<description>Library to reduce the code necessary to start and make a controlled shutdown of standalone applications</description>
