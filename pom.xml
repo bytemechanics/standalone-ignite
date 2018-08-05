@@ -55,6 +55,7 @@
 								<copy>
 									<artifact>${project.groupId}:copy-commons:1.3.0-SNAPSHOT</artifact>
 									<classes>
+										<class>org.bytemechanics.commons.string.Figlet</class>
 										<class>org.bytemechanics.commons.string.GenericTextParser</class>
 										<class>org.bytemechanics.commons.string.SimpleFormat</class>
 										<class>org.bytemechanics.commons.functional.LambdaUnchecker</class>

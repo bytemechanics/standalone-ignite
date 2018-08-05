@@ -15,9 +15,16 @@
  */
 package org.bytemechanics.standalone.ignite
 
+import org.bytemechanics.standalone.logger.*
+import org.bytemechanics.standalone.ignite.internal.commons.string.*
 import spock.lang.*
 import spock.lang.Specification
 import spock.lang.Unroll
+import java.nio.charset.Charset
+import java.io.*
+import java.util.Queue
+import java.util.LinkedList
+import org.bytemechanics.standalone.ignite.exceptions.*
 
 import java.util.logging.*
 
@@ -142,5 +149,83 @@ class StandaloneSpec extends Specification{
 			arguments=["-booleanvalue:true","-intvalue:2234","-longvalue:3243321312","-floatvalue:3123.32","-doublevalue:3123.32","-stringvalue:TEST"].toArray(new String[4])
 	}
 
+		
+	@Unroll
+	def "Ingnite with name should print a banner with the given #name name and #font font"(){
+		println(">>>>> StandaloneSpec >>>> Ingnite with name should print a banner with the given $name name and $font font")
+		setup:
+			Ignitable ignitable=Mock()
+			Queue console=new LinkedList();
+			Standalone standalone=Standalone.builder()
+												.supplier({ -> ignitable})
+												.name(name)
+												.bannerFont(fontURL)
+												.console({message -> console.add(message)})
+											.build();
+			def javaVersion=SimpleFormat.format("\tJVM: {}",System.getProperty("java.version"));
+			def basePath=SimpleFormat.format("\tBase path: {}",new File(".").getCanonicalPath());
+			def cores=SimpleFormat.format("\tCores: {}",Runtime.getRuntime().availableProcessors());
+			def memory=SimpleFormat.format("\tMemory (bytes): {}/{}",Runtime.getRuntime().totalMemory(),Runtime.getRuntime().maxMemory());
+			final Package instancePackage=ignitable.getClass().getPackage();
+			def version=SimpleFormat.format("\tVersion: {}/{}",(instancePackage!=null)? instancePackage.getSpecificationVersion() : "unknown",
+															(instancePackage!=null)? instancePackage.getImplementationVersion() : "unknown");
+			
+		when:
+			standalone.ignite()
+
+		then: 
+			console.poll()==line
+			console.poll()==banner
+			console.poll()==linesimple
+			console.poll()==javaVersion
+			console.poll()==cores
+			console.poll()==memory
+			console.poll()==basePath
+			console.poll()==version
+			console.poll()==line
+
+		where:
+			name				| font				| fontURL
+			"testerot-null"		| null				| null	
+			"testerot2-null"	| null				| null
+			"testerot-standard"	| "standard.flf"	| Standalone.class.getClassLoader().getSystemResource("standard.flf")
+			"testerot2-standard"| "standard.flf"	| Standalone.class.getClassLoader().getSystemResource("standard.flf")
+			"testerot-universe"	| "basic_1.flf"		| ParameterTest.class.getClassLoader().getSystemResource("basic_1.flf")
+			"testerot2-universe"| "basic_1.flf"		| ParameterTest.class.getClassLoader().getSystemResource("basic_1.flf")
+			
+			effectiveFontURL=(fontURL==null)? Standalone.class.getClassLoader().getSystemResource("standard.flf") : fontURL
+			banner=	(new Figlet(
+								effectiveFontURL.openStream()
+								,Charset.forName("UTF-8")))
+							.print(name)
+			line=(new Figlet(
+								effectiveFontURL.openStream()
+								,Charset.forName("UTF-8")))
+							.line(name,(char)'=')
+			linesimple=(new Figlet(
+								effectiveFontURL.openStream()
+								,Charset.forName("UTF-8")))
+							.line(name,(char)'-')
+	}
+
+	@Unroll
+	def "If no mandatory parameter provided show error message and print help"(){
+		println(">>>>> StandaloneSpec >>>> If no mandatory parameter provided show error message and print help")
+		setup:
+			Ignitable ignitable=Mock()
+			Queue console=new LinkedList();
+			Standalone standalone=Standalone.builder()
+												.supplier({ -> ignitable})
+												.parameters(StandaloneAppTestParameter.class)
+												.console({message -> console.add(message)})
+											.build();
+			
+		when:
+			standalone.ignite()
+
+		then: 
+			console.poll()==new MandatoryArgumentNotProvided(StandaloneAppTestParameter.BOOLEANVALUE).getMessage()
+			console.poll()==Parameter.getHelp(StandaloneAppTestParameter.class)
+	}
 }
 

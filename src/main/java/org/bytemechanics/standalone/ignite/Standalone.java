@@ -16,9 +16,22 @@
 package org.bytemechanics.standalone.ignite;
 
 import java.io.Closeable;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
+import org.bytemechanics.standalone.ignite.exceptions.FontNotReadable;
 import org.bytemechanics.standalone.ignite.exceptions.MandatoryArgumentNotProvided;
+import org.bytemechanics.standalone.ignite.internal.commons.string.Figlet;
+import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
 
 /**
  * Standalone configuration container
@@ -26,23 +39,61 @@ import org.bytemechanics.standalone.ignite.exceptions.MandatoryArgumentNotProvid
  */
 public class Standalone{
 	
+	/** Standalone name. OPTIONAL*/
+	private final String name;
+	/** Banner font. OPTIONAL*/
+	private final URL bannerFont;
 	/** supplier for standalone implementation. MANDATORY*/
 	private final Supplier<? extends Ignitable> supplier;
 	/** parameters enumeration class. OPTIONAL */
 	private final Class<? extends Enum<? extends Parameter>> parameters;
 	/** Arguments from the command line execution. OPTIONAL */
 	private final String[] arguments;
+	/** console consumer by default java.util.logging. OPTIONAL*/
+	private final Consumer<String> console;
+
 	/** Internal ignitable instance */
 	private Ignitable instance;
 
-	public Standalone(final Supplier<? extends Ignitable> supplier,final Class<? extends Enum<? extends Parameter>> parameters,final String[] arguments){
-		if(supplier==null)
+	public Standalone(final Supplier<? extends Ignitable> _supplier,final String _name,final Class<? extends Enum<? extends Parameter>> _parameters,final String[] _arguments,final Consumer<String> _console,final URL _bannerFont){
+		if(_supplier==null)
 			throw new NullPointerException("Mandatory \"supplier\" can not be null");
-		this.supplier=supplier;
-		this.arguments=((arguments==null)||arguments.length==0)? new String[0] : arguments;
-		this.parameters=parameters;
+		this.name=_name;
+		this.bannerFont=(_bannerFont!=null)? _bannerFont : ClassLoader.getSystemResource("standard.flf");
+		this.supplier=_supplier;
+		this.arguments=((_arguments==null)||_arguments.length==0)? new String[0] : _arguments;
+		this.parameters=_parameters;
 		this.instance=null;
+		this.console=(_console!=null)? _console : getDefaultConsole();
 	}
+	
+	/**
+	 * Initializes java logging to create a CONSOLE output without prefixes
+	 * @return The same instance provided
+	 */
+	private Consumer<String> getDefaultConsole(){
+		
+		final Logger logger=Logger.getLogger("CONSOLE");
+		
+//		Stream.of(logger.getHandlers())
+//				.forEach(handler -> logger.removeHandler(handler));
+		logger.setUseParentHandlers(false);
+		logger.addHandler(new Handler() {
+			@Override
+			public void publish(LogRecord record) {
+				System.out.println(record.getMessage());
+			}
+			@Override
+			public void flush() {
+				System.out.flush();
+			}
+			@Override
+			public void close() throws SecurityException {}
+		});
+		logger.setLevel(Level.INFO);
+		
+		return (message) -> logger.info(message);
+	} 
 	
 	/** 
 	 * Helper function to allow chaining without force users to return the ignitable instance. Internally calls _ignitable#beforeStartup()
@@ -169,6 +220,45 @@ public class Standalone{
 		
 		return self;
 	} 
+
+	/**
+	 * Prints banner into CONSOLE logger at INFO level if name is informed
+	 * @return The same instance provided
+	 */
+	protected Standalone printBanner(){
+		
+		final Standalone self=this;
+		
+		if(this.name!=null){
+			try(InputStream font=this.bannerFont.openStream()){
+				Figlet figlet=new Figlet(font, Charset.forName("UTF-8"));
+				String banner=figlet.print(this.name);
+				this.console.accept(figlet.line(this.name,'='));
+				this.console.accept(banner);
+				this.console.accept(figlet.line(this.name,'-'));
+				this.console.accept(SimpleFormat.format("\tJVM: {}",System.getProperty("java.version")));
+				this.console.accept(SimpleFormat.format("\tCores: {}",Runtime.getRuntime().availableProcessors()));
+				this.console.accept(SimpleFormat.format("\tMemory (bytes): {}/{}",Runtime.getRuntime().totalMemory(),Runtime.getRuntime().maxMemory()));
+				this.console.accept(SimpleFormat.format("\tBase path: {}", new File(".").getCanonicalPath()));
+				this.console.accept(SimpleFormat.format("\tVersion: {}/{}",
+															Optional.of(this.instance)
+																		.map(Object::getClass)
+																		.map(Class::getPackage)
+																		.map(Package::getSpecificationVersion)
+																		.orElse("unknown"),
+															Optional.of(this.instance)
+																		.map(Object::getClass)
+																		.map(Class::getPackage)
+																		.map(Package::getImplementationVersion)
+																		.orElse("unknown")));
+				this.console.accept(figlet.line(this.name,'='));
+			} catch (IOException e) {
+				throw new FontNotReadable(this.bannerFont,e);
+			}
+		}
+		
+		return self;
+	} 
 	
 	/**
 	 * Call this method to ignite the standalone application this method will:
@@ -187,15 +277,22 @@ public class Standalone{
 					.map(Standalone::instantiate)
 					.map(Standalone::addShutdownHook)
 					.map(Standalone::parseParameters)
+					.map(Standalone::printBanner)
 					.map(Standalone::startup)
-					//.map(config -> (!config.isDaemon())? config.shutdown() : config)
 					.orElseThrow(() -> new NullPointerException("_configuration can not be null"));
 		}catch(MandatoryArgumentNotProvided e){
-			System.out.println(e.getMessage());
-			System.out.println(Parameter.getHelp(this.parameters));
+			this.console.accept(e.getMessage());
+			this.console.accept(Parameter.getHelp(this.parameters));
 		}
 	}
 
+	/**
+	 * Standalone name. If present banner is printed at console. OPTIONAL
+	 * @return Standalone name. OPTIONAL
+	 */
+	protected String getName() {
+		return this.name;
+	}
 
 	/**
 	 * Supplier for standalone implementation. MANDATORY
@@ -229,41 +326,41 @@ public class Standalone{
 
 	@java.lang.SuppressWarnings("all")
 	public static class StandaloneBuilder {
-		
-		@java.lang.SuppressWarnings("all")
+
+		private String name;
+		private URL bannerFont;
 		private Supplier<? extends Ignitable> supplier;
-		@java.lang.SuppressWarnings("all")
 		private Class<? extends Enum<? extends Parameter>> parameters;
-		@java.lang.SuppressWarnings("all")
 		private String[] arguments;
+		private Consumer<String> console;
 
-		@java.lang.SuppressWarnings("all")
-		public StandaloneBuilder supplier(final Supplier<? extends Ignitable> supplier) {
-			this.supplier = supplier;
+		public StandaloneBuilder name(final String _name) {
+			this.name = _name;
+			return this;
+		}
+		public StandaloneBuilder bannerFont(final URL _bannerFont) {
+			this.bannerFont = _bannerFont;
+			return this;
+		}
+		public StandaloneBuilder supplier(final Supplier<? extends Ignitable> _supplier) {
+			this.supplier = _supplier;
+			return this;
+		}
+		public StandaloneBuilder parameters(final Class<? extends Enum<? extends Parameter>> _parameters) {
+			this.parameters = _parameters;
+			return this;
+		}
+		public StandaloneBuilder arguments(final String[] _arguments) {
+			this.arguments = _arguments;
+			return this;
+		}
+		public StandaloneBuilder console(final Consumer<String> _console) {
+			this.console = _console;
 			return this;
 		}
 
-		@java.lang.SuppressWarnings("all")
-		public StandaloneBuilder parameters(final Class<? extends Enum<? extends Parameter>> parameters) {
-			this.parameters = parameters;
-			return this;
-		}
-
-		@java.lang.SuppressWarnings("all")
-		public StandaloneBuilder arguments(final String[] arguments) {
-			this.arguments = arguments;
-			return this;
-		}
-
-		@java.lang.SuppressWarnings("all")
 		public Standalone build() {
-			return new Standalone(supplier, parameters, arguments);
-		}
-
-		@java.lang.Override
-		@java.lang.SuppressWarnings("all")
-		public java.lang.String toString() {
-			return "Standalone.StandaloneBuilder(supplier=" + this.supplier + ", parameters=" + this.parameters + ", arguments=" + java.util.Arrays.deepToString(this.arguments) + ")";
+			return new Standalone(supplier,name, parameters, arguments,console,bannerFont);
 		}
 	}
 
