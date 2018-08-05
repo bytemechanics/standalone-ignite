@@ -150,25 +150,25 @@ public interface Parameter {
 	
 	/**
 	 * Parse all given parameters and stores in the parameter enumeration
-	 * @param <P> type of the parameters enumeration
 	 * @param _parameters parameters enumeration class
 	 * @param _args Arguments from the command line execution
 	 */
-	public static <P extends Enum & Parameter> void parseParameters(final Class<P> _parameters,final String... _args){
+	public static void parseParameters(final Class<? extends Enum<? extends Parameter>> _parameters,final String... _args){
 
 		Stream.of(_parameters.getEnumConstants())
+					.map(param -> (Parameter)param)
 					.forEach(param -> param.loadParameter(_args));
 	} 
 
 	/**
 	 * Returns the default help for all parameters of the given parameter class
-	 * @param <P> type of the parameters enumeration
 	 * @param _parameters parameters enumeration class
 	 * @return returns the list of 
 	 */
-	public static <P extends Enum & Parameter> String getHelp(final Class<P> _parameters){
+	public static String getHelp(final Class<? extends Enum<? extends Parameter>> _parameters){
 
 		return Stream.of(_parameters.getEnumConstants())
+							.map(param -> (Parameter)param)
 							.map(param -> param.getHelp())
 							.collect(Collectors.joining("\n\t","Usage:\n\t","\n"));
 	} 

@@ -28,46 +28,34 @@ public interface Ignitable {
 
 	/**
 	 * Override this method to implement special tasks before startup
-	 * @return itself in order to be able to chain calls
 	 */
-	public default Ignitable beforeStartup(){
-		return this;
-	}
+	public default void beforeStartup(){}
 	
 	/**
 	 * Override this method to implement the ignitable content. If this instance implements Runnable, then the default implementation will call Runnable::run
-	 * @return itself in order to be able to chain calls
 	 * @see Runnable
 	 */
-	public default Ignitable startup(){
+	public default void startup(){
 		if(this instanceof Runnable){
 			((Runnable)this).run();
 		}
-		return this;
 	}
 	/**
 	 * Override this method to implement special tasks after startup
-	 * @return itself in order to be able to chain calls
 	 */
-	public default Ignitable afterStartup(){
-		return this;
-	}
+	public default void afterStartup(){}
 
 	/**
 	 * Override this method to implement special tasks before shutdown is called.
-	 * @return itself in order to be able to chain calls
 	 */
-	public default Ignitable beforeShutdown(){
-		return this;
-	}
+	public default void beforeShutdown(){}
 	
 	/**
 	 * Override this method to implement special tasks for graceful shutdown.
 	 * If this instance implements Closeable, then the default implementation will call Closeable::close
-	 * @return itself in order to be able to chain calls
 	 * @see Closeable
 	 */
-	public default Ignitable shutdown(){
+	public default void shutdown(){
 		if(this instanceof Closeable){
 			try {
 				((Closeable)this).close();
@@ -75,13 +63,10 @@ public interface Ignitable {
 				throw new ShutdownSystemFailure(e);
 			}
 		}
-		return this;
 	}
 
 	/**
 	 * Override this method to implement special tasks after graceful shutdown
 	 */
-	public default Ignitable afterShutdown(){
-		return this;
-	}
+	public default void afterShutdown(){}
 }

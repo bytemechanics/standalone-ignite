@@ -21,31 +21,98 @@ import java.util.function.Supplier;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
+import org.bytemechanics.standalone.ignite.exceptions.MandatoryArgumentNotProvided;
 
 /**
  * Standalone configuration container
  * @author afarre
- * @param <P> parameters class type
  */
 @Data
-@Builder
-public class Standalone<P extends Enum & Parameter> implements Runnable{
+public class Standalone{
 	
 	/** supplier for standalone implementation. MANDATORY*/
 	@NonNull
 	private final Supplier<? extends Ignitable> supplier;
 	/** parameters enumeration class. OPTIONAL */
-	private final Class<P> parameters;
+	private final Class<? extends Enum<? extends Parameter>> parameters;
 	/** Arguments from the command line execution. OPTIONAL */
-	@Builder.Default
-	private final String[] arguments=new String[0];
-	/** daemon flag, the main class has an infinite loop, therefore close method won't be called after right after startup. OPTIONAL (default false)*/
-	private final boolean daemon;
-	@Builder.Default
+	private final String[] arguments;
 	/** Internal ignitable instance */
-	private Ignitable instance=null;
+	private Ignitable instance;
+
+	@Builder
+	public Standalone(final Supplier<? extends Ignitable> supplier,final Class<? extends Enum<? extends Parameter>> parameters,final String[] arguments){
+		this.supplier=supplier;
+		this.arguments=((arguments==null)||arguments.length==0)? new String[0] : arguments;
+		this.parameters=parameters;
+		this.instance=null;
+	}
 	
+	/** 
+	 * Helper function to allow chaining without force users to return the ignitable instance. Internally calls _ignitable#beforeStartup()
+	 * @param _ignitable ignitable instance
+	 * @return the given ignitable instance
+	 * @see Ignitable#beforeStartup() 
+	 */
+	private Ignitable beforeStartupFunction(final Ignitable _ignitable){
+		_ignitable.beforeStartup();
+		return _ignitable;
+	}
+	/** 
+	 * Helper function to allow chaining without force users to return the ignitable instance. Internally calls _ignitable#startup()
+	 * @param _ignitable ignitable instance
+	 * @return the given ignitable instance
+	 * @see Ignitable#startup() 
+	 */
+	private Ignitable startupFunction(final Ignitable _ignitable){
+		_ignitable.startup();
+		return _ignitable;
+	}
+	/** 
+	 * Helper function to allow chaining without force users to return the ignitable instance. Internally calls _ignitable#afterStartup()
+	 * @param _ignitable ignitable instance
+	 * @return the given ignitable instance
+	 * @see Ignitable#afterStartup() 
+	 */
+	private Ignitable afterStartupFunction(final Ignitable _ignitable){
+		_ignitable.afterStartup();
+		return _ignitable;
+	}
+	/** 
+	 * Helper function to allow chaining without force users to return the ignitable instance. Internally calls _ignitable#beforeShutdown()
+	 * @param _ignitable ignitable instance
+	 * @return the given ignitable instance
+	 * @see Ignitable#beforeShutdown() 
+	 */
+	private Ignitable beforeShutdownFunction(final Ignitable _ignitable){
+		_ignitable.beforeShutdown();
+		return _ignitable;
+	}
+	/** 
+	 * Helper function to allow chaining without force users to return the ignitable instance. Internally calls _ignitable#shutdown()
+	 * @param _ignitable ignitable instance
+	 * @return the given ignitable instance
+	 * @see Ignitable#shutdown() 
+	 */
+	private Ignitable shutdownFunction(final Ignitable _ignitable){
+		_ignitable.shutdown();
+		return _ignitable;
+	}
+	/** 
+	 * Helper function to allow chaining without force users to return the ignitable instance. Internally calls _ignitable#afterShutdown()
+	 * @param _ignitable ignitable instance
+	 * @return the given ignitable instance
+	 * @see Ignitable#afterShutdown() 
+	 */
+	private Ignitable afterShutdownFunction(final Ignitable _ignitable){
+		_ignitable.afterShutdown();
+		return _ignitable;
+	}
 	
+	/**
+	 * Instantiate ignitable from supplier and stores in an internal variable
+	 * @return Standalone instance
+	 */
 	protected Standalone instantiate(){
 		this.instance=Optional.ofNullable(this.supplier)
 								.map(Supplier::get)
@@ -62,9 +129,9 @@ public class Standalone<P extends Enum & Parameter> implements Runnable{
 	 */
 	protected Standalone startup(){
 		Optional.ofNullable(this.instance)
-					.map(Ignitable::beforeStartup)
-					.map(Ignitable::startup)
-					.ifPresent(Ignitable::afterStartup);
+					.map(this::beforeStartupFunction)
+					.map(this::startupFunction)
+					.ifPresent(this::afterStartupFunction);
 		return this;
 	}
 
@@ -76,9 +143,9 @@ public class Standalone<P extends Enum & Parameter> implements Runnable{
 	 */
 	protected Standalone shutdown(){
 		Optional.ofNullable(this.instance)
-					.map(Ignitable::beforeShutdown)
-					.map(Ignitable::shutdown)
-					.ifPresent(Ignitable::afterShutdown);
+					.map(this::beforeShutdownFunction)
+					.map(this::shutdownFunction)
+					.ifPresent(this::afterShutdownFunction);
 		return this;
 	}
 	
@@ -102,7 +169,7 @@ public class Standalone<P extends Enum & Parameter> implements Runnable{
 		final Standalone self=this;
 		Runtime
 			.getRuntime()
-				.addShutdownHook(new Thread(this));
+				.addShutdownHook(new Thread(() -> this.shutdown()));
 		
 		return self;
 	} 
@@ -119,22 +186,17 @@ public class Standalone<P extends Enum & Parameter> implements Runnable{
 	 */
 	public void ignite(){
 		
-		Optional.of(this)
-				.map(Standalone::instantiate)
-				.map(Standalone::addShutdownHook)
-				.map(Standalone::parseParameters)
-				.map(Standalone::startup)
-				.map(config -> (!config.isDaemon())? config.shutdown() : config)
-				.orElseThrow(() -> new NullPointerException("_configuration can not be null"));
-
-	}
-
-	@Override
-	public void run() {
 		try{
-			this.instance.shutdown();
-		}catch(Throwable e){
-			e.printStackTrace();
+			Optional.of(this)
+					.map(Standalone::instantiate)
+					.map(Standalone::addShutdownHook)
+					.map(Standalone::parseParameters)
+					.map(Standalone::startup)
+					//.map(config -> (!config.isDaemon())? config.shutdown() : config)
+					.orElseThrow(() -> new NullPointerException("_configuration can not be null"));
+		}catch(MandatoryArgumentNotProvided e){
+			System.out.println(e.getMessage());
+			System.out.println(Parameter.getHelp(this.parameters));
 		}
 	}
 }

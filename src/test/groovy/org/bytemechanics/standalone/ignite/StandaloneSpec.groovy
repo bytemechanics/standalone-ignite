@@ -42,8 +42,8 @@ class StandaloneSpec extends Specification{
 	}
 	
 	@Unroll
-	def "Ignite call should call ignitable startup (before and after) and inmediatelly shutdown (before and after)"(){
-		println(">>>>> StandaloneSpec >>>> Ignite call should call startup (before and after) and inmediatelly shutdown (before and after)")
+	def "Ignite call should call ignitable startup (before and after)"(){
+		println(">>>>> StandaloneSpec >>>> Ignite call should call startup (before and after)")
 		setup:
 			Ignitable ignitable=Mock()
 		
@@ -54,34 +54,31 @@ class StandaloneSpec extends Specification{
 							.ignite()
 
 		then: 
-			1 * ignitable.beforeStartup() >> ignitable
-			1 * ignitable.startup()  >> ignitable
-			1 * ignitable.afterStartup()  >> ignitable
-			1 * ignitable.beforeShutdown()  >> ignitable
-			1 * ignitable.shutdown()  >> ignitable
-			1 * ignitable.afterShutdown()  >> ignitable
+			1 * ignitable.beforeStartup()
+			1 * ignitable.startup()  
+			1 * ignitable.afterStartup() 
 	}
 
 	@Unroll
-	def "Ignite daemon call should call ignitable startup (before and after) and inmediatelly shutdown (before and after)"(){
-		println(">>>>> StandaloneSpec >>>> Ignite daemon call should call startup (before and after) and inmediatelly shutdown (before and after)")
+	def "When shutdown is call before and after must be executed"(){
+		println(">>>>> StandaloneSpec >>>> When shutdown is call before and after must be executed")
 		setup:
 			Ignitable ignitable=Mock()
+			Standalone standalone=Standalone.builder()
+												.supplier({ -> ignitable})
+											.build();
 		
 		when:
-			Standalone.builder()
-							.supplier({ -> ignitable})
-							.daemon(true)
-						.build()
-							.ignite()
+			standalone.ignite()
+			standalone.shutdown()
 
 		then: 
-			1 * ignitable.beforeStartup() >> ignitable
-			1 * ignitable.startup()  >> ignitable
-			1 * ignitable.afterStartup()  >> ignitable
-			0 * ignitable.beforeShutdown()  >> ignitable
-			0 * ignitable.shutdown()  >> ignitable
-			0 * ignitable.afterShutdown()  >> ignitable
+			1 * ignitable.beforeStartup() 
+			1 * ignitable.startup() 
+			1 * ignitable.afterStartup() 
+			1 * ignitable.beforeShutdown() 
+			1 * ignitable.shutdown() 
+			1 * ignitable.afterShutdown()  
 	}
 
 	def "ParseParameters must do nothing if no parameters defined"(){
@@ -90,7 +87,6 @@ class StandaloneSpec extends Specification{
 			Ignitable ignitable=Mock()
 			Standalone standalone=Standalone.builder()
 												.supplier({ -> ignitable})
-												.daemon(true)
 											.build()
 			Standalone standalone2=standalone.parseParameters()
 		then:
@@ -106,7 +102,6 @@ class StandaloneSpec extends Specification{
 												.supplier({ -> ignitable})
 												.parameters(StandaloneAppTestParameter.class)
 												.arguments(arguments)
-												.daemon(true)
 											.build();
 
 		when:
