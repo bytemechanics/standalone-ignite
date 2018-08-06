@@ -44,7 +44,7 @@ public class Standalone{
 	/** Banner font. OPTIONAL*/
 	private final URL bannerFont;
 	/** supplier for standalone implementation. MANDATORY*/
-	private final Supplier<? extends Ignitable> supplier;
+	private final Supplier<Ignitable> supplier;
 	/** parameters enumeration class. OPTIONAL */
 	private final Class<? extends Enum<? extends Parameter>> parameters;
 	/** Arguments from the command line execution. OPTIONAL */
@@ -56,7 +56,7 @@ public class Standalone{
 	private Ignitable instance;
 
 	
-	public Standalone(final Supplier<? extends Ignitable> _supplier,final String _name,final Class<? extends Enum<? extends Parameter>> _parameters,final String[] _arguments,final Consumer<String> _console,final URL _bannerFont){
+	public Standalone(final Supplier<Ignitable> _supplier,final String _name,final Class<? extends Enum<? extends Parameter>> _parameters,final String[] _arguments,final Consumer<String> _console,final URL _bannerFont){
 		if(_supplier==null)
 			throw new NullPointerException("Mandatory \"supplier\" can not be null");
 		this.name=_name;
@@ -298,7 +298,7 @@ public class Standalone{
 	 * Supplier for standalone implementation. MANDATORY
 	 * @return supplier for standalone implementation. MANDATORY
 	 */
-	protected Supplier<? extends Ignitable> getSupplier() {
+	protected Supplier<Ignitable> getSupplier() {
 		return this.supplier;
 	}
 	/**
@@ -329,7 +329,7 @@ public class Standalone{
 
 		private String name;
 		private URL bannerFont;
-		private Supplier<? extends Ignitable> supplier;
+		private Supplier<Ignitable> supplier;
 		private Class<? extends Enum<? extends Parameter>> parameters;
 		private String[] arguments;
 		private Consumer<String> console;
@@ -342,7 +342,7 @@ public class Standalone{
 			this.bannerFont = _bannerFont;
 			return this;
 		}
-		public StandaloneBuilder supplier(final Supplier<? extends Ignitable> _supplier) {
+		public StandaloneBuilder supplier(final Supplier<Ignitable> _supplier) {
 			this.supplier = _supplier;
 			return this;
 		}
