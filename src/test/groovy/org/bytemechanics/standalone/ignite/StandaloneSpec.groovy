@@ -15,9 +15,17 @@
  */
 package org.bytemechanics.standalone.ignite
 
+import org.bytemechanics.standalone.logger.*
+import org.bytemechanics.standalone.ignite.internal.commons.string.*
 import spock.lang.*
 import spock.lang.Specification
 import spock.lang.Unroll
+import java.nio.charset.Charset
+import java.io.*
+import java.nio.file.*
+import java.util.Queue
+import java.util.LinkedList
+import org.bytemechanics.standalone.ignite.exceptions.*
 
 import java.util.logging.*
 
@@ -42,8 +50,24 @@ class StandaloneSpec extends Specification{
 	}
 	
 	@Unroll
-	def "Ignite call should call ignitable startup (before and after) and inmediatelly shutdown (before and after)"(){
-		println(">>>>> StandaloneSpec >>>> Ignite call should call startup (before and after) and inmediatelly shutdown (before and after)")
+	def "When supplier is not provided a NullPointerException is raised"(){
+		println(">>>>> StandaloneSpec >>>> When supplier is not provided a NullPointerException is raised")
+		setup:
+			Ignitable ignitable=Mock()
+		
+		when:
+			Standalone.builder()
+						.build()
+							.ignite()
+
+		then: 
+			def e=thrown(NullPointerException) 
+			e.getMessage()=="Mandatory \"supplier\" can not be null"
+	}
+	
+	@Unroll
+	def "Ignite call should call ignitable startup (before and after)"(){
+		println(">>>>> StandaloneSpec >>>> Ignite call should call startup (before and after)")
 		setup:
 			Ignitable ignitable=Mock()
 		
@@ -54,34 +78,31 @@ class StandaloneSpec extends Specification{
 							.ignite()
 
 		then: 
-			1 * ignitable.beforeStartup() >> ignitable
-			1 * ignitable.startup()  >> ignitable
-			1 * ignitable.afterStartup()  >> ignitable
-			1 * ignitable.beforeShutdown()  >> ignitable
-			1 * ignitable.shutdown()  >> ignitable
-			1 * ignitable.afterShutdown()  >> ignitable
+			1 * ignitable.beforeStartup()
+			1 * ignitable.startup()  
+			1 * ignitable.afterStartup() 
 	}
 
 	@Unroll
-	def "Ignite daemon call should call ignitable startup (before and after) and inmediatelly shutdown (before and after)"(){
-		println(">>>>> StandaloneSpec >>>> Ignite daemon call should call startup (before and after) and inmediatelly shutdown (before and after)")
+	def "When shutdown is call before and after must be executed"(){
+		println(">>>>> StandaloneSpec >>>> When shutdown is call before and after must be executed")
 		setup:
 			Ignitable ignitable=Mock()
+			Standalone standalone=Standalone.builder()
+												.supplier({ -> ignitable})
+											.build();
 		
 		when:
-			Standalone.builder()
-							.supplier({ -> ignitable})
-							.daemon(true)
-						.build()
-							.ignite()
+			standalone.ignite()
+			standalone.shutdown()
 
 		then: 
-			1 * ignitable.beforeStartup() >> ignitable
-			1 * ignitable.startup()  >> ignitable
-			1 * ignitable.afterStartup()  >> ignitable
-			0 * ignitable.beforeShutdown()  >> ignitable
-			0 * ignitable.shutdown()  >> ignitable
-			0 * ignitable.afterShutdown()  >> ignitable
+			1 * ignitable.beforeStartup() 
+			1 * ignitable.startup() 
+			1 * ignitable.afterStartup() 
+			1 * ignitable.beforeShutdown() 
+			1 * ignitable.shutdown() 
+			1 * ignitable.afterShutdown()  
 	}
 
 	def "ParseParameters must do nothing if no parameters defined"(){
@@ -90,7 +111,6 @@ class StandaloneSpec extends Specification{
 			Ignitable ignitable=Mock()
 			Standalone standalone=Standalone.builder()
 												.supplier({ -> ignitable})
-												.daemon(true)
 											.build()
 			Standalone standalone2=standalone.parseParameters()
 		then:
@@ -106,7 +126,6 @@ class StandaloneSpec extends Specification{
 												.supplier({ -> ignitable})
 												.parameters(StandaloneAppTestParameter.class)
 												.arguments(arguments)
-												.daemon(true)
 											.build();
 
 		when:
@@ -131,5 +150,102 @@ class StandaloneSpec extends Specification{
 			arguments=["-booleanvalue:true","-intvalue:2234","-longvalue:3243321312","-floatvalue:3123.32","-doublevalue:3123.32","-stringvalue:TEST"].toArray(new String[4])
 	}
 
+		
+	@Unroll
+	def "Ingnite with name should print a banner with the given #name name and #font font"(){
+		println(">>>>> StandaloneSpec >>>> Ingnite with name should print a banner with the given $name name and $font font")
+		setup:
+			Ignitable ignitable=Mock()
+			Queue console=new LinkedList();
+			Standalone standalone=Standalone.builder()
+												.supplier({ -> ignitable})
+												.name(name)
+												.bannerFont(fontURL)
+												.console({message -> console.add(message)})
+											.build();
+			def javaVersion=SimpleFormat.format("\tJVM: {}",System.getProperty("java.version"));
+			def basePath=SimpleFormat.format("\tBase path: {}",new File(".").getCanonicalPath());
+			def cores=SimpleFormat.format("\tCores: {}",Runtime.getRuntime().availableProcessors());
+			def memory=SimpleFormat.format("\tMemory (bytes): {}/{}",Runtime.getRuntime().totalMemory(),Runtime.getRuntime().maxMemory());
+			final Package instancePackage=ignitable.getClass().getPackage();
+			def version=SimpleFormat.format("\tVersion: {}/{}",(instancePackage!=null)? instancePackage.getSpecificationVersion() : "unknown",
+															(instancePackage!=null)? instancePackage.getImplementationVersion() : "unknown");
+			
+		when:
+			standalone.ignite()
+
+		then: 
+			console.poll()==line
+			console.poll()==banner
+			console.poll()==linesimple
+			console.poll()==javaVersion
+			console.poll()==cores
+			console.poll()==memory
+			console.poll()==basePath
+			console.poll()==version
+			console.poll()==line
+
+		where:
+			name				| font				| fontURL
+			"testerot-null"		| null				| null	
+			"testerot2-null"	| null				| null
+			"testerot-standard"	| "standard.flf"	| Standalone.class.getClassLoader().getSystemResource("standard.flf")
+			"testerot2-standard"| "standard.flf"	| Standalone.class.getClassLoader().getSystemResource("standard.flf")
+			"testerot-universe"	| "basic_1.flf"		| ParameterTest.class.getClassLoader().getSystemResource("basic_1.flf")
+			"testerot2-universe"| "basic_1.flf"		| ParameterTest.class.getClassLoader().getSystemResource("basic_1.flf")
+			
+			effectiveFontURL=(fontURL==null)? Standalone.class.getClassLoader().getSystemResource("standard.flf") : fontURL
+			banner=	(new Figlet(
+								effectiveFontURL.openStream()
+								,Charset.forName("UTF-8")))
+							.print(name)
+			line=(new Figlet(
+								effectiveFontURL.openStream()
+								,Charset.forName("UTF-8")))
+							.line(name,(char)'=')
+			linesimple=(new Figlet(
+								effectiveFontURL.openStream()
+								,Charset.forName("UTF-8")))
+							.line(name,(char)'-')
+	}
+	
+	def "Provide a wrong file format font should raise a NoFigletFontFormatException exception"(){
+		println(">>>>> StandaloneSpec >>>> Provide a wrong file format font should raise a NoFigletFontFormatException exception")
+		setup:
+			Ignitable ignitable=Mock()
+			Queue console=new LinkedList();
+			Standalone standalone=Standalone.builder()
+												.supplier({ -> ignitable})
+												.name("name")
+												.bannerFont(Paths.get("./src/test/resources/logging.properties").toUri().toURL())
+												.console({message -> console.add(message)})
+											.build();
+		when:
+			standalone.ignite()
+
+		then: 
+			def e=thrown(Figlet.NoFigletFontFormatException)
+			e.getMessage()=="Input has not figlet font file format (.flf)"
+	}
+	
+	@Unroll
+	def "If no mandatory parameter provided show error message and print help"(){
+		println(">>>>> StandaloneSpec >>>> If no mandatory parameter provided show error message and print help")
+		setup:
+			Ignitable ignitable=Mock()
+			Queue console=new LinkedList();
+			Standalone standalone=Standalone.builder()
+												.supplier({ -> ignitable})
+												.parameters(StandaloneAppTestParameter.class)
+												.console({message -> console.add(message)})
+											.build();
+			
+		when:
+			standalone.ignite()
+
+		then: 
+			console.poll()==new MandatoryArgumentNotProvided(StandaloneAppTestParameter.BOOLEANVALUE).getMessage()
+			console.poll()==Parameter.getHelp(StandaloneAppTestParameter.class)
+	}
 }
 

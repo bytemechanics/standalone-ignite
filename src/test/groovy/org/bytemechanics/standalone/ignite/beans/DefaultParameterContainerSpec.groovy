@@ -62,7 +62,7 @@ class DefaultParameterContainerSpec extends Specification{
 
 		then:
 			def e=thrown(NullPointerException) 
-			e.getMessage()=="name"
+			e.getMessage()=="Mandatory \"name\" can not be null"
 
 	}
 	def "Builder must throw NullPointerException if no type is provided"(){
@@ -75,7 +75,7 @@ class DefaultParameterContainerSpec extends Specification{
 
 		then:
 			def e=thrown(NullPointerException) 
-			e.getMessage()=="type"
+			e.getMessage()=="Mandatory \"type\" can not be null"
 
 	}
 	def "Builder must throw NullPointerException if no description is provided"(){
@@ -88,7 +88,7 @@ class DefaultParameterContainerSpec extends Specification{
 
 		then:
 			def e=thrown(NullPointerException) 
-			e.getMessage()=="description"
+			e.getMessage()=="Mandatory \"description\" can not be null"
 
 	}
 	def "Constructor must throw NullPointerException if no name is provided"(){
@@ -98,7 +98,7 @@ class DefaultParameterContainerSpec extends Specification{
 
 		then:
 			def e=thrown(NullPointerException) 
-			e.getMessage()=="name"
+			e.getMessage()=="Mandatory \"name\" can not be null"
 
 	}
 	def "Constructor must throw NullPointerException if no type is provided"(){
@@ -108,7 +108,7 @@ class DefaultParameterContainerSpec extends Specification{
 
 		then:
 			def e=thrown(NullPointerException) 
-			e.getMessage()=="type"
+			e.getMessage()=="Mandatory \"type\" can not be null"
 
 	}
 	def "Constructor must throw NullPointerException if no description is provided"(){
@@ -118,7 +118,7 @@ class DefaultParameterContainerSpec extends Specification{
 
 		then:
 			def e=thrown(NullPointerException) 
-			e.getMessage()=="description"
+			e.getMessage()=="Mandatory \"description\" can not be null"
 
 	}
 	def "Constructor with name and type must be created without problem being mandatory"(){
