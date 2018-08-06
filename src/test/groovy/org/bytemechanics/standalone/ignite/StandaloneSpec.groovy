@@ -22,6 +22,7 @@ import spock.lang.Specification
 import spock.lang.Unroll
 import java.nio.charset.Charset
 import java.io.*
+import java.nio.file.*
 import java.util.Queue
 import java.util.LinkedList
 import org.bytemechanics.standalone.ignite.exceptions.*
@@ -207,7 +208,26 @@ class StandaloneSpec extends Specification{
 								,Charset.forName("UTF-8")))
 							.line(name,(char)'-')
 	}
+	
+	def "Provide a wrong file format font should raise a NoFigletFontFormatException exception"(){
+		println(">>>>> StandaloneSpec >>>> Provide a wrong file format font should raise a NoFigletFontFormatException exception")
+		setup:
+			Ignitable ignitable=Mock()
+			Queue console=new LinkedList();
+			Standalone standalone=Standalone.builder()
+												.supplier({ -> ignitable})
+												.name("name")
+												.bannerFont(Paths.get("./src/test/resources/logging.properties").toUri().toURL())
+												.console({message -> console.add(message)})
+											.build();
+		when:
+			standalone.ignite()
 
+		then: 
+			def e=thrown(Figlet.NoFigletFontFormatException)
+			e.getMessage()=="Input has not figlet font file format (.flf)"
+	}
+	
 	@Unroll
 	def "If no mandatory parameter provided show error message and print help"(){
 		println(">>>>> StandaloneSpec >>>> If no mandatory parameter provided show error message and print help")
