@@ -1,4 +1,9 @@
 # Standalone ignite
+[![Latest version](https://maven-badges.herokuapp.com/maven-central/org.bytemechanics/standalone-ignite/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.bytemechanics/standalone-ignite/badge.svg)
+[![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=org.bytemechanics%3Astandalone-ignite&metric=alert_status)](https://sonarcloud.io/dashboard/index/org.bytemechanics%3Astandalone-ignite)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=org.bytemechanics%3Astandalone-ignite&metric=coverage)](https://sonarcloud.io/dashboard/index/org.bytemechanics%3Astandalone-ignite)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
 Library to reduce the code necessary to start and make a controlled shutdown of standalone applications. The scope of this library is to provide solutions for:
 * Easy parse of command line parameters
 * Easy start and stop daemons (standalone services) inside your standalone application
@@ -12,6 +17,7 @@ JDK8
 
 ## Quick start
 1. First of all include the Jar file in your compile and execution classpath.
+
 ### Maven
 ```Maven
 	<dependency>
@@ -26,12 +32,13 @@ dependencies {
     compile 'org.bytemechanics:standalone-ignite:X.X.X'
 }
 ```
-1. Create the standalone application main class
+
+2. Create the standalone application main class
 ```
 package mypackage;
 ```
 
-1. If some parameters are needed, create an enumerate with all necessary parameters
+3. If some parameters are needed, create an enumerate with all necessary parameters
 ```
 package mypackage;
 
@@ -99,7 +106,7 @@ public enum StandaloneAppTestParameter implements Parameter{
 }
 ```
 
-1. Into your main instantiate Standalone
+4. Into your main instantiate Standalone
 ```
 package mypackage;
 
@@ -152,7 +159,7 @@ public final class StandaloneApp implements Ignitable{
 }
 ```
 
-1. Into your main instantiate launch standalone calling ignite() method
+5. Into your main instantiate launch standalone calling ignite() method
 ```
 package mypackage;
 

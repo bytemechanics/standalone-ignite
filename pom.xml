@@ -11,7 +11,7 @@
 	<packaging>jar</packaging>
 	<name>Standalone Ignite</name>
 	<description>Library to reduce the code necessary to start and make a controlled shutdown of standalone applications</description>
-	<url>http://www.bytemechanics.org</url>
+	<url>https://standalone-ignite.bytemechanics.org</url>
 	<developers>
 		<developer>
 			<name>Albert Farré Figueras</name>
