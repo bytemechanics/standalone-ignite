@@ -55,6 +55,7 @@ public class Standalone{
 	/** Internal ignitable instance */
 	private Ignitable instance;
 
+	
 	public Standalone(final Supplier<? extends Ignitable> _supplier,final String _name,final Class<? extends Enum<? extends Parameter>> _parameters,final String[] _arguments,final Consumer<String> _console,final URL _bannerFont){
 		if(_supplier==null)
 			throw new NullPointerException("Mandatory \"supplier\" can not be null");
@@ -67,6 +68,7 @@ public class Standalone{
 		this.console=(_console!=null)? _console : getDefaultConsole();
 	}
 	
+	
 	/**
 	 * Initializes java logging to create a CONSOLE output without prefixes
 	 * @return The same instance provided
@@ -75,8 +77,6 @@ public class Standalone{
 		
 		final Logger logger=Logger.getLogger("CONSOLE");
 		
-//		Stream.of(logger.getHandlers())
-//				.forEach(handler -> logger.removeHandler(handler));
 		logger.setUseParentHandlers(false);
 		logger.addHandler(new Handler() {
 			@Override
@@ -273,13 +273,11 @@ public class Standalone{
 	public void ignite(){
 		
 		try{
-			Optional.of(this)
-					.map(Standalone::instantiate)
-					.map(Standalone::addShutdownHook)
-					.map(Standalone::parseParameters)
-					.map(Standalone::printBanner)
-					.map(Standalone::startup)
-					.orElseThrow(() -> new NullPointerException("_configuration can not be null"));
+			instantiate()
+				.addShutdownHook()
+					.parseParameters()
+						.printBanner()
+							.startup();
 		}catch(MandatoryArgumentNotProvided e){
 			this.console.accept(e.getMessage());
 			this.console.accept(Parameter.getHelp(this.parameters));

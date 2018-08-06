@@ -7,7 +7,7 @@ Library to reduce the code necessary to start and make a controlled shutdown of 
 ## Motivation
 Some times make something so simple as batch generates a lot of boilerplate source with this library we intend to make this startup easier and faster as well as keeping the control of all startup process.
 
-##Requirements
+## Requirements
 JDK8
 
 ## Quick start
@@ -39,10 +39,6 @@ import java.util.Optional;
 import java.util.function.Function;
 import org.bytemechanics.standalone.ignite.beans.DefaultParameterContainer;
 
-/**
- *
- * @author afarre
- */
 public enum StandaloneAppTestParameter implements Parameter{
 
 	BOOLEANVALUE(boolean.class,"boolean value"),
@@ -99,6 +95,84 @@ public enum StandaloneAppTestParameter implements Parameter{
 	@Override
 	public String getDescription() {
 		return this.container.getDescription();
+	}
+}
+```
+
+1. Into your main instantiate Standalone
+```
+package mypackage;
+
+import java.util.Optional;
+import java.util.function.Function;
+import org.bytemechanics.standalone.ignite.beans.DefaultParameterContainer;
+
+
+public final class StandaloneApp implements Ignitable{
+
+	@Override
+	public void beforeStartup() {
+		System.out.println("before-startup");
+	}
+	@Override
+	public void startup() {
+		System.out.println("startup");
+	}
+	@Override
+	public void afterStartup() {
+		System.out.println("after-startup");
+	}
+
+
+	@Override
+	public void beforeShutdown() {
+		System.out.println("before-shutdown");
+	}
+	@Override
+	public void shutdown() {
+		System.out.println("shutdown");
+	}
+	@Override
+	public void afterShutdown() {
+		System.out.println("after-shutdown");
+	}
+
+	(...)
+
+	public static final void main(final String... _args){
+		Standalone.builder()
+					.arguments(_args)
+					.supplier(StandaloneApp::new)
+					(...)
+					.parameters(StandaloneAppTestParameter.class)
+					(...)
+				.build();
+		(...)
+	}
+}
+```
+
+1. Into your main instantiate launch standalone calling ignite() method
+```
+package mypackage;
+
+import java.util.Optional;
+import java.util.function.Function;
+import org.bytemechanics.standalone.ignite.beans.DefaultParameterContainer;
+
+
+public final class StandaloneApp implements Ignitable{
+
+	(...)
+
+	public static final void main(final String... _args){
+		Standalone.builder()
+					.arguments(_args)
+					.supplier(StandaloneApp::new)
+					.parameters(StandaloneAppTestParameter.class)
+					(...)
+				.build()
+					.ignite();
 	}
 }
 ```
