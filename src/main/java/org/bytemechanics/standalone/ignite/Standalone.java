@@ -88,11 +88,13 @@ public class Standalone{
 				System.out.flush();
 			}
 			@Override
-			public void close() throws SecurityException {}
+			public void close() {
+				// Do nothing because System.out can not be closed
+			}
 		});
 		logger.setLevel(Level.INFO);
 		
-		return (message) -> logger.info(message);
+		return logger::info;
 	} 
 	
 	/** 
@@ -216,7 +218,7 @@ public class Standalone{
 		final Standalone self=this;
 		Runtime
 			.getRuntime()
-				.addShutdownHook(new Thread(() -> this.shutdown()));
+				.addShutdownHook(new Thread(this::shutdown));
 		
 		return self;
 	} 
