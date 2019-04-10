@@ -28,6 +28,7 @@ import java.time.*
 import java.time.format.*
 import org.bytemechanics.standalone.ignite.internal.commons.string.*
 import org.bytemechanics.standalone.ignite.exceptions.MandatoryArgumentNotProvided
+import org.bytemechanics.standalone.ignite.exceptions.NullOrEmptyMandatoryArgument
 import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat
 
 /**
@@ -72,6 +73,20 @@ class ParameterSpec extends Specification{
 		where:
 			parameters=StandaloneAppTestParameter.class
 			arguments=["-booleanvalue:true","-intvalue:2234","-longvalue:3243321312","-floatvalue:3123.32","-doublevalue:3123.32","-stringvalue:TEST"].toArray(new String[4])
+	}
+
+	@Unroll
+	def "ParseParameters #arguments for #parameters must fail with empty value"(){
+		println(">>>>> DefaultParameterContainerSpec >>>> ParseParameters $arguments for $parameters must fail with empty value")
+		when:
+			Parameter.parseParameters(parameters,arguments)
+
+		then: 
+			def e=thrown(NullOrEmptyMandatoryArgument) 
+	
+		where:
+			parameters=StandaloneAppTestParameter.class
+			arguments=["-booleanvalue:","-intvalue: ","-longvalue:   ","-floatvalue: ","-doublevalue:      ","-stringvalue: "].toArray(new String[4])
 	}
 }
 
