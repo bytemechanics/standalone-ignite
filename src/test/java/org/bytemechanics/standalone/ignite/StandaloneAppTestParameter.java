@@ -31,6 +31,7 @@ public enum StandaloneAppTestParameter implements Parameter{
 	FLOATVALUE(float.class,"float value"),
 	DOUBLEVALUE(double.class,"double value"),
 	STRINGVALUE(String.class,"string value"),
+	ENUMVALUE(StandaloneAppTestParameter.class,"string value"),
 	;
 	
 	private final DefaultParameterContainer container;

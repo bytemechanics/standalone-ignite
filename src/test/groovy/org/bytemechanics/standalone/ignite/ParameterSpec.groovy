@@ -50,7 +50,6 @@ class ParameterSpec extends Specification{
 		}
 	}
 
-	@Unroll
 	def "ParseParameters #arguments for #parameters must parse correctly the correct values"(){
 		println(">>>>> DefaultParameterContainerSpec >>>> ParseParameters $arguments for $parameters must parse correctly the correct values")
 		when:
@@ -69,10 +68,11 @@ class ParameterSpec extends Specification{
 			StandaloneAppTestParameter.DOUBLEVALUE.getValue(double.class).get()==3123.32d
 			StandaloneAppTestParameter.BOOLEANVALUE.getValue(String.class).isPresent()
 			StandaloneAppTestParameter.STRINGVALUE.getValue(String.class).get()=="TEST"
+			StandaloneAppTestParameter.ENUMVALUE.getValue(StandaloneAppTestParameter.class).get()==StandaloneAppTestParameter.ENUMVALUE
 	
 		where:
 			parameters=StandaloneAppTestParameter.class
-			arguments=["-booleanvalue:true","-intvalue:2234","-longvalue:3243321312","-floatvalue:3123.32","-doublevalue:3123.32","-stringvalue:TEST"].toArray(new String[4])
+			arguments=["-booleanvalue:true","-intvalue:2234","-longvalue:3243321312","-floatvalue:3123.32","-doublevalue:3123.32","-stringvalue:TEST","-enumvalue:ENUMVALUE"].toArray(new String[4])
 	}
 
 	@Unroll

@@ -22,6 +22,7 @@ import java.util.stream.Stream;
 import org.bytemechanics.standalone.ignite.exceptions.MandatoryArgumentNotProvided;
 import org.bytemechanics.standalone.ignite.exceptions.NullOrEmptyMandatoryArgument;
 import org.bytemechanics.standalone.ignite.exceptions.UnparseableParameter;
+import org.bytemechanics.standalone.ignite.internal.EnumParseExceptionParameter;
 import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
 
 /**
@@ -124,6 +125,8 @@ public interface Parameter {
 			return Optional.ofNullable(getParser())
 							.map(supplier -> supplier.apply(_value))
 							.orElse(_value);
+		}catch(EnumParseExceptionParameter e){
+			throw new UnparseableParameter(this, e);
 		}catch(Exception e){
 			throw new UnparseableParameter(this, _value, e);
 		}
