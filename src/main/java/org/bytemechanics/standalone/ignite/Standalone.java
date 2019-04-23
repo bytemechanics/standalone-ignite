@@ -268,7 +268,6 @@ public class Standalone{
 	 *   <li>Get standalone instance</li>
 	 *   <li>Register shutdown hook</li>
 	 *   <li>Call startup</li>
-	 *   <li>Call shutdown (if daemon is false)</li>
 	 * </ul>
 	 * @see Standalone
 	 */
@@ -286,6 +285,18 @@ public class Standalone{
 		}
 	}
 
+	/**
+	 * Call this method to programatically shutdown() the application. 
+	 * @param _exitCode exit code to use when shutdown application this method force current jvm execution termination
+	 * @see Standalone#shutdown() 
+	 * @see System#exit(int) 
+	 * @since 1.1.0
+	 */	
+	public void extinguish(final int _exitCode){
+		shutdown();
+		System.exit(_exitCode);
+	}
+	
 	/**
 	 * Standalone name. If present banner is printed at console. OPTIONAL
 	 * @return Standalone name. OPTIONAL
