@@ -40,6 +40,7 @@ public class DefaultParameterContainer implements Parameter{
 	private final Class<? extends Object> type;
 	private final String defaultValue;
 	private final Function<String,Object> parser;
+	private final Function<Object,String> validation;
 	private final boolean caseSensitive;
 	private Object value;
 
@@ -49,11 +50,12 @@ public class DefaultParameterContainer implements Parameter{
 	 * @param type parameter class (mandatory)
 	 * @param description parameter description (mandatory)
 	 * @param parser parser supplier
+	 * @param validation validation 
 	 * @param caseSensitive flag to indicate that enum parameters parse must be case sensitive. (by default case sensitive)
 	 * @param defaultValue default value
 	 * @param prefixes prefixes available to use for this parameter
 	 */
-	public DefaultParameterContainer(final String name,final Class<? extends Object> type,final String description,final Function<String,Object> parser,final boolean caseSensitive,final String defaultValue,final String... prefixes) {
+	public DefaultParameterContainer(final String name,final Class<? extends Object> type,final String description,final Function<String,Object> parser,final Function<Object,String> validation,final boolean caseSensitive,final String defaultValue,final String... prefixes) {
 		if(name==null)
 			throw new NullPointerException("Mandatory \"name\" can not be null");
 		this.name = name;
@@ -66,6 +68,7 @@ public class DefaultParameterContainer implements Parameter{
 								.convert(type);
 		this.defaultValue=defaultValue;
 		this.caseSensitive=caseSensitive;
+		this.validation=validation;
 		this.parser=Optional.ofNullable(parser)
 										.orElseGet(() -> getDefaultParser(this.name,(Class<Object>)this.type,this.caseSensitive));
 		this.value=Optional.ofNullable(this.defaultValue)
@@ -149,6 +152,11 @@ public class DefaultParameterContainer implements Parameter{
 		return this.parser;
 	}
 
+	@Override
+	public Function<Object, String> getValidation() {
+		return this.validation;
+	}
+
 	/**
 	 * @see Parameter#getValue() 
 	 */
@@ -191,6 +199,7 @@ public class DefaultParameterContainer implements Parameter{
 		private Class<? extends Object> type;
 		private String description;
 		private Function<String, Object> parser;
+		private Function<Object,String> validation;
 		private String defaultValue;
 		private String[] prefixes;
 		private boolean caseSensitive;
@@ -214,6 +223,10 @@ public class DefaultParameterContainer implements Parameter{
 			this.parser = parser;
 			return this;
 		}
+		public DefaultParameterContainerBuilder validation(final Function<Object,String> validation) {
+			this.validation = validation;
+			return this;
+		}
 		public DefaultParameterContainerBuilder defaultValue(final String defaultValue) {
 			this.defaultValue = defaultValue;
 			return this;
@@ -228,13 +241,13 @@ public class DefaultParameterContainer implements Parameter{
 		}
 
 		public DefaultParameterContainer build() {
-			return new DefaultParameterContainer(name, type, description, parser,caseSensitive, defaultValue, prefixes);
+			return new DefaultParameterContainer(name, type, description, parser,validation,caseSensitive, defaultValue, prefixes);
 		}
 
 		@Override
 		public java.lang.String toString() {
-			return SimpleFormat.format("DefaultParameterContainer.DefaultParameterContainerBuilder(name={}, type={}, description={}, parser={}, caseSensitive={}, defaultValue={}, prefixes={})", 
-										this.name ,this.type,this.description,this.parser,this.caseSensitive,this.defaultValue,Arrays.deepToString(this.prefixes));
+			return SimpleFormat.format("DefaultParameterContainer.DefaultParameterContainerBuilder(name={}, type={}, description={}, parser={}, validation={}, caseSensitive={}, defaultValue={}, prefixes={})", 
+										this.name ,this.type,this.description,this.parser,this.validation,this.caseSensitive,this.defaultValue,Arrays.deepToString(this.prefixes));
 		}
 	}
 

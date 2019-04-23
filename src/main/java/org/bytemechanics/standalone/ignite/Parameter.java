@@ -19,6 +19,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.bytemechanics.standalone.ignite.exceptions.InvalidParameter;
 import org.bytemechanics.standalone.ignite.exceptions.MandatoryArgumentNotProvided;
 import org.bytemechanics.standalone.ignite.exceptions.NullOrEmptyMandatoryArgument;
 import org.bytemechanics.standalone.ignite.exceptions.UnparseableParameter;
@@ -65,6 +66,14 @@ public interface Parameter {
 	 */
 	public default boolean isMandatory(){
 		return !getDefaultValue().isPresent();
+	}
+	/**
+	 * Semantic validation after correct parameters parse is done when the validation method is executed all parameters has its values
+	 * @return function to validate semantically the parameter if valid returns null otherwise the error description
+	 * @since 1.1.0
+	 */
+	public default Function<Object,String> getValidation(){
+		return null;
 	}
 	
 	/**
@@ -131,6 +140,17 @@ public interface Parameter {
 			throw new UnparseableParameter(this, _value, e);
 		}
 	}
+	/**
+	 * Executes the configured semantic validation for the given parameter
+	 * @throws UnparseableParameter if can not be parsed
+	 */
+	public default void validateParameter(){
+		Optional.ofNullable(getValidation())
+				.filter(validation -> getValue().isPresent())
+				.map(validation -> validation.apply(getValue().get()))
+				.map(cause -> new InvalidParameter(this, getValue().get(), cause))
+				.ifPresent(semanticFailure -> { throw semanticFailure; });
+	}
 
 	/**
 	 * Search into arguments the parameter, parse and assign as value
@@ -166,6 +186,18 @@ public interface Parameter {
 		Stream.of(_parameters.getEnumConstants())
 					.map(param -> (Parameter)param)
 					.forEach(param -> param.loadParameter(_args));
+	} 
+	
+	/**
+	 * Execute semantic validations for all present parameter values
+	 * @param _parameters parameters enumeration class
+	 * @since 1.1.0
+	 */
+	public static void validateParameters(final Class<? extends Enum<? extends Parameter>> _parameters){
+
+		Stream.of(_parameters.getEnumConstants())
+					.map(param -> (Parameter)param)
+					.forEach(Parameter::validateParameter);
 	} 
 
 	/**

@@ -208,6 +208,13 @@ public class Standalone{
 					.ifPresent(par -> Parameter.parseParameters(par, arguments));
 		return this;
 	} 
+
+	protected Standalone validateParameters(){
+		
+		Optional.ofNullable(this.parameters)
+					.ifPresent(par -> Parameter.validateParameters(par));
+		return this;
+	} 
 	
 	/**
 	 * Registers the shutdown hook to perform a graceful shutdown by calling the Standalone::shudtdown method
@@ -277,8 +284,9 @@ public class Standalone{
 			instantiate()
 				.addShutdownHook()
 					.parseParameters()
-						.printBanner()
-							.startup();
+						.validateParameters()
+							.printBanner()
+								.startup();
 		}catch(MandatoryArgumentNotProvided e){
 			this.console.accept(e.getMessage());
 			this.console.accept(Parameter.getHelp(this.parameters));

@@ -150,6 +150,28 @@ class StandaloneSpec extends Specification{
 			parameters=StandaloneAppTestParameter.class
 			arguments=["-booleanvalue:true","-intvalue:2234","-longvalue:3243321312","-floatvalue:3123.32","-doublevalue:3123.32","-stringvalue:TEST","-enumvalue:ENUMVALUE"].toArray(new String[4])
 	}
+	@Unroll
+	def "ParseParameters #arguments for #parameters must validate the parameters"(){
+		println(">>>>> StandaloneSpec >>>> ParseParameters $arguments for $parameters must validate the parameters")
+		setup:
+			Ignitable ignitable=Mock()
+			Standalone standalone=Standalone.builder()
+												.supplier({ -> ignitable})
+												.parameters(StandaloneAppTestParameter.class)
+												.arguments(arguments)
+											.build();
+
+		when:
+			standalone.ignite()
+
+		then: 
+			def e=thrown(InvalidParameter)
+			e.getMessage()=="Invalid parameter STRINGVALUE with value semanticFailure: semantic test error requested"
+	
+		where:
+			parameters=StandaloneAppTestParameter.class
+			arguments=["-booleanvalue:true","-intvalue:2234","-longvalue:3243321312","-floatvalue:3123.32","-doublevalue:3123.32","-stringvalue:semanticFailure","-enumvalue:ENUMVALUE"].toArray(new String[4])
+	}
 
 		
 	@Unroll

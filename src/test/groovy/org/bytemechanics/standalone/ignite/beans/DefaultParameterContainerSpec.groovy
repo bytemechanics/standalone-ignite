@@ -94,7 +94,7 @@ class DefaultParameterContainerSpec extends Specification{
 	def "Constructor must throw NullPointerException if no name is provided"(){
 		println(">>>>> DefaultParameterContainerSpec >>>> Constructor must throw NullPointerException if no name is provided")
 		when:
-			def DefaultParameterContainer container=new DefaultParameterContainer(null,boolean.class,"",null,true,null);
+			def DefaultParameterContainer container=new DefaultParameterContainer(null,boolean.class,"",null,null,true,null);
 
 		then:
 			def e=thrown(NullPointerException) 
@@ -104,7 +104,7 @@ class DefaultParameterContainerSpec extends Specification{
 	def "Constructor must throw NullPointerException if no type is provided"(){
 		println(">>>>> DefaultParameterContainerSpec >>>> Constructor must throw NullPointerException if no type is provided")
 		when:
-			def DefaultParameterContainer container=new DefaultParameterContainer("name",null,"",null,true,null);
+			def DefaultParameterContainer container=new DefaultParameterContainer("name",null,"",null,null,true,null);
 
 		then:
 			def e=thrown(NullPointerException) 
@@ -114,7 +114,7 @@ class DefaultParameterContainerSpec extends Specification{
 	def "Constructor must throw NullPointerException if no description is provided"(){
 		println(">>>>> DefaultParameterContainerSpec >>>> Constructor must throw NullPointerException if no type is provided")
 		when:
-			def DefaultParameterContainer container=new DefaultParameterContainer("name",boolean.class,null,null,true,null);
+			def DefaultParameterContainer container=new DefaultParameterContainer("name",boolean.class,null,null,null,true,null);
 
 		then:
 			def e=thrown(NullPointerException) 
@@ -124,7 +124,7 @@ class DefaultParameterContainerSpec extends Specification{
 	def "Constructor with name and type must be created without problem being mandatory"(){
 		println(">>>>> DefaultParameterContainerSpec >>>> Constructor with name and type must be created without problem being mandatory")
 		when:
-			def DefaultParameterContainer container=new DefaultParameterContainer("name",boolean.class,"description",null,true,null);
+			def DefaultParameterContainer container=new DefaultParameterContainer("name",boolean.class,"description",null,null,true,null);
 
 		then:
 			container.isMandatory()
@@ -139,7 +139,7 @@ class DefaultParameterContainerSpec extends Specification{
 	def "When new instance created with name:#name,type:#type,parser:null and defaultValue:#defaultValue then the value stored should be the default #parsed one"(){
 		println(">>>>> DefaultParameterContainerSpec >>>> When new instance created with name:$name,type:$type,parser:null and defaultValue:$defaultValue the value stored should be the default $parsed one")
 		when:
-			DefaultParameterContainer container=new DefaultParameterContainer(name,type,"description",null,true,defaultValue)
+			DefaultParameterContainer container=new DefaultParameterContainer(name,type,"description",null,null,true,defaultValue)
 
 		then: 
 			container.name()==name
@@ -216,7 +216,7 @@ class DefaultParameterContainerSpec extends Specification{
 	def "When new instance created with name:#name,type:#type,parser:null and no default value then when retrieve value should return null"(){
 		println(">>>>> DefaultParameterContainerSpec >>>> When new instance created with name:$name,type:$type,parser:null and no default value then when retrieve value should return null")
 		when:
-			DefaultParameterContainer container=new DefaultParameterContainer(name,type,"description",null,true,null)
+			DefaultParameterContainer container=new DefaultParameterContainer(name,type,"description",null,null,true,null)
 
 		then: 
 			container.name()==name
