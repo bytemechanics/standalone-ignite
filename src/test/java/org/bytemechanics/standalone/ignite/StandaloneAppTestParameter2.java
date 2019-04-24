@@ -23,32 +23,32 @@ import org.bytemechanics.standalone.ignite.beans.DefaultParameterContainer;
  *
  * @author afarre
  */
-public enum StandaloneAppTestParameter implements Parameter{
+public enum StandaloneAppTestParameter2 implements Parameter{
 
-	BOOLEANVALUE(boolean.class,"boolean value"),
-	INTVALUE(int.class,"int value"),
-	LONGVALUE(long.class,"long value"),
-	FLOATVALUE(float.class,"float value"),
-	DOUBLEVALUE(double.class,"double value"),
-	STRINGVALUE(String.class,"string value",val -> 
+	ADDITIONALBOOLEANVALUE(boolean.class,"boolean value"),
+	ADDITIONALINTVALUE(int.class,"int value"),
+	ADDITIONALLONGVALUE(long.class,"long value"),
+	ADDITIONALFLOATVALUE(float.class,"float value"),
+	ADDITIONALDOUBLEVALUE(double.class,"double value"),
+	ADDITIONALSTRINGVALUE(String.class,"string value",val -> 
 													(val.equals("semanticFailure")? 
-													"semantic test error requested" 
+													"semantic test 2 error requested" 
 													: null)),
-	ENUMVALUE(StandaloneAppTestParameter.class,"string value"),
+	ADDITIONALENUMVALUE(StandaloneAppTestParameter2.class,"string value"),
 	;
 	
 	private final DefaultParameterContainer container;
 	
-	<T extends Object> StandaloneAppTestParameter(final Class<T> _type,final String _description){
+	<T extends Object> StandaloneAppTestParameter2(final Class<T> _type,final String _description){
 		this(_type,_description,null,null,null);
 	}
-	<T extends Object> StandaloneAppTestParameter(final Class<T> _type,final String _description,final String _default){
+	<T extends Object> StandaloneAppTestParameter2(final Class<T> _type,final String _description,final String _default){
 		this(_type,_description,_default,null,null);
 	}
-	<T extends Object> StandaloneAppTestParameter(final Class<T> _type,final String _description,final Function<Object,String> _validation){
+	<T extends Object> StandaloneAppTestParameter2(final Class<T> _type,final String _description,final Function<Object,String> _validation){
 		this(_type,_description,null,null,_validation);
 	}
-	<T extends Object> StandaloneAppTestParameter(final Class<T> _type,final String _description,final String _default,final Function<String,T> _parser,final Function<Object,String> _validation){
+	<T extends Object> StandaloneAppTestParameter2(final Class<T> _type,final String _description,final String _default,final Function<String,T> _parser,final Function<Object,String> _validation){
 		this.container=DefaultParameterContainer.builder()
 												.name(name())
 												.type(_type)

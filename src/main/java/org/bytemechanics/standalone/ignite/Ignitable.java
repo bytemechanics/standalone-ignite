@@ -17,7 +17,9 @@ package org.bytemechanics.standalone.ignite;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.Optional;
 import org.bytemechanics.standalone.ignite.exceptions.ShutdownSystemFailure;
+import org.bytemechanics.standalone.ignite.internal.commons.functional.LambdaUnchecker;
 
 /**
  * Basic interface to provide a startup and shutdown hooks to avoid boilerplate
@@ -46,6 +48,16 @@ public interface Ignitable {
 	public default void afterStartup(){}
 
 	/**
+	 * Override this method to implement startup exception special treatment; otherwise is rethrown.
+	 * @param <T> exception type
+	 * @param _exception cause
+	 */
+	public default <T extends Exception> void startupException(final T _exception){
+		Optional.ofNullable(_exception)
+				.ifPresent(LambdaUnchecker.uncheckedConsumer(ex -> {throw ex;}));
+	}
+
+	/**
 	 * Override this method to implement special tasks before shutdown is called.
 	 */
 	public default void beforeShutdown(){}
@@ -69,4 +81,14 @@ public interface Ignitable {
 	 * Override this method to implement special tasks after graceful shutdown
 	 */
 	public default void afterShutdown(){}
+
+	/**
+	 * Override this method to implement shutdown exception special treatment; otherwise is rethrown.
+	 * @param <T> exception type
+	 * @param _exception cause
+	 */
+	public default <T extends Exception> void shutdownException(final T _exception){
+		Optional.ofNullable(_exception)
+				.ifPresent(LambdaUnchecker.uncheckedConsumer(ex -> {throw ex;}));
+	}
 }

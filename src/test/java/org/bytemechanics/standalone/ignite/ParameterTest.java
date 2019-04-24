@@ -55,7 +55,8 @@ public class ParameterTest {
 							+ "\n\t[-longvalue]: long value (Mandatory)"
 							+ "\n\t[-floatvalue]: float value (Mandatory)"
 							+ "\n\t[-doublevalue]: double value (Mandatory)"
-							+ "\n\t[-stringvalue]: string value (Mandatory)\n";
+							+ "\n\t[-stringvalue]: string value (Mandatory)"
+							+ "\n\t[-enumvalue]: string value (Mandatory)\n";
 
 		//when:
 			String actual=Parameter.getHelp(StandaloneAppTestParameter.class);

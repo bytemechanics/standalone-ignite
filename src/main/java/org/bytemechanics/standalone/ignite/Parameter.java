@@ -15,13 +15,16 @@
  */
 package org.bytemechanics.standalone.ignite;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.bytemechanics.standalone.ignite.exceptions.InvalidParameter;
 import org.bytemechanics.standalone.ignite.exceptions.MandatoryArgumentNotProvided;
 import org.bytemechanics.standalone.ignite.exceptions.NullOrEmptyMandatoryArgument;
 import org.bytemechanics.standalone.ignite.exceptions.UnparseableParameter;
+import org.bytemechanics.standalone.ignite.internal.EnumParseExceptionParameter;
 import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
 
 /**
@@ -64,6 +67,14 @@ public interface Parameter {
 	 */
 	public default boolean isMandatory(){
 		return !getDefaultValue().isPresent();
+	}
+	/**
+	 * Semantic validation after correct parameters parse is done when the validation method is executed all parameters has its values
+	 * @return function to validate semantically the parameter if valid returns null otherwise the error description
+	 * @since 1.1.0
+	 */
+	public default Function<Object,String> getValidation(){
+		return null;
 	}
 	
 	/**
@@ -124,9 +135,22 @@ public interface Parameter {
 			return Optional.ofNullable(getParser())
 							.map(supplier -> supplier.apply(_value))
 							.orElse(_value);
+		}catch(EnumParseExceptionParameter e){
+			throw new UnparseableParameter(this, e);
 		}catch(Exception e){
 			throw new UnparseableParameter(this, _value, e);
 		}
+	}
+	/**
+	 * Executes the configured semantic validation for the given parameter
+	 * @throws UnparseableParameter if can not be parsed
+	 */
+	public default void validateParameter(){
+		Optional.ofNullable(getValidation())
+				.filter(validation -> getValue().isPresent())
+				.map(validation -> validation.apply(getValue().get()))
+				.map(cause -> new InvalidParameter(this, getValue().get(), cause))
+				.ifPresent(semanticFailure -> { throw semanticFailure; });
 	}
 
 	/**
@@ -164,17 +188,44 @@ public interface Parameter {
 					.map(param -> (Parameter)param)
 					.forEach(param -> param.loadParameter(_args));
 	} 
+	
+	/**
+	 * Execute semantic validations for all present parameter values
+	 * @param _parameters parameters enumeration class
+	 * @since 1.1.0
+	 */
+	public static void validateParameters(final Class<? extends Enum<? extends Parameter>> _parameters){
+
+		Stream.of(_parameters.getEnumConstants())
+					.map(param -> (Parameter)param)
+					.forEach(Parameter::validateParameter);
+	} 
 
 	/**
 	 * Returns the default help for all parameters of the given parameter class
-	 * @param _parameters parameters enumeration class
+	 * @param _parameterClass parameters enumeration class
 	 * @return returns the list of 
 	 */
-	public static String getHelp(final Class<? extends Enum<? extends Parameter>> _parameters){
+	public static String getHelp(final Class<? extends Enum<? extends Parameter>> _parameterClass){
 
-		return Stream.of(_parameters.getEnumConstants())
+		return getHelp(
+					Stream.of(_parameterClass)
+							.collect(Collectors.toList()));
+	} 
+
+	/**
+	 * Returns the default help for all parameters of the given parameter class
+	 * @param _parameterClasses parameters enumeration classes
+	 * @return returns the list of 
+	 * @since 1.1.0
+	 */
+	public static String getHelp(final List<Class<? extends Enum<? extends Parameter>>> _parameterClasses){
+
+		return _parameterClasses.stream()
+							.map(Class::getEnumConstants)
+							.flatMap(Stream::of)
 							.map(param -> (Parameter)param)
-							.map(param -> param.getHelp())
+							.map(Parameter::getHelp)
 							.collect(Collectors.joining("\n\t","Usage:\n\t","\n"));
 	} 
 }
