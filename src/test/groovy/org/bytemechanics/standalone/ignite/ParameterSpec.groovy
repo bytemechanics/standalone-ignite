@@ -29,6 +29,7 @@ import java.time.format.*
 import org.bytemechanics.standalone.ignite.internal.commons.string.*
 import org.bytemechanics.standalone.ignite.exceptions.MandatoryArgumentNotProvided
 import org.bytemechanics.standalone.ignite.exceptions.NullOrEmptyMandatoryArgument
+import org.bytemechanics.standalone.ignite.exceptions.InvalidParameter
 import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat
 
 /**
@@ -50,7 +51,6 @@ class ParameterSpec extends Specification{
 		}
 	}
 
-	@Unroll
 	def "ParseParameters #arguments for #parameters must parse correctly the correct values"(){
 		println(">>>>> DefaultParameterContainerSpec >>>> ParseParameters $arguments for $parameters must parse correctly the correct values")
 		when:
@@ -69,10 +69,11 @@ class ParameterSpec extends Specification{
 			StandaloneAppTestParameter.DOUBLEVALUE.getValue(double.class).get()==3123.32d
 			StandaloneAppTestParameter.BOOLEANVALUE.getValue(String.class).isPresent()
 			StandaloneAppTestParameter.STRINGVALUE.getValue(String.class).get()=="TEST"
+			StandaloneAppTestParameter.ENUMVALUE.getValue(StandaloneAppTestParameter.class).get()==StandaloneAppTestParameter.ENUMVALUE
 	
 		where:
 			parameters=StandaloneAppTestParameter.class
-			arguments=["-booleanvalue:true","-intvalue:2234","-longvalue:3243321312","-floatvalue:3123.32","-doublevalue:3123.32","-stringvalue:TEST"].toArray(new String[4])
+			arguments=["-booleanvalue:true","-intvalue:2234","-longvalue:3243321312","-floatvalue:3123.32","-doublevalue:3123.32","-stringvalue:TEST","-enumvalue:ENUMVALUE"].toArray(new String[4])
 	}
 
 	@Unroll
@@ -87,6 +88,49 @@ class ParameterSpec extends Specification{
 		where:
 			parameters=StandaloneAppTestParameter.class
 			arguments=["-booleanvalue:","-intvalue: ","-longvalue:   ","-floatvalue: ","-doublevalue:      ","-stringvalue: "].toArray(new String[4])
+	}
+
+	
+	def "ValidateParameters #arguments for #parameters must parse correctly the correct values"(){
+		println(">>>>> DefaultParameterContainerSpec >>>> ParseParameters $arguments for $parameters must parse correctly the correct values")
+		when:
+			Parameter.parseParameters(parameters,arguments)
+			Parameter.validateParameters(parameters)
+
+		then: 
+			StandaloneAppTestParameter.BOOLEANVALUE.getValue(boolean.class).isPresent()
+			StandaloneAppTestParameter.BOOLEANVALUE.getValue(boolean.class).get()==true
+			StandaloneAppTestParameter.BOOLEANVALUE.getValue(int.class).isPresent()
+			StandaloneAppTestParameter.INTVALUE.getValue(int.class).get()==2234
+			StandaloneAppTestParameter.BOOLEANVALUE.getValue(long.class).isPresent()
+			StandaloneAppTestParameter.LONGVALUE.getValue(long.class).get()==3243321312
+			StandaloneAppTestParameter.BOOLEANVALUE.getValue(float.class).isPresent()
+			StandaloneAppTestParameter.FLOATVALUE.getValue(float.class).get()==3123.32f
+			StandaloneAppTestParameter.BOOLEANVALUE.getValue(double.class).isPresent()
+			StandaloneAppTestParameter.DOUBLEVALUE.getValue(double.class).get()==3123.32d
+			StandaloneAppTestParameter.BOOLEANVALUE.getValue(String.class).isPresent()
+			StandaloneAppTestParameter.STRINGVALUE.getValue(String.class).get()=="TEST"
+			StandaloneAppTestParameter.ENUMVALUE.getValue(StandaloneAppTestParameter.class).get()==StandaloneAppTestParameter.ENUMVALUE
+
+		where:
+			parameters=StandaloneAppTestParameter.class
+			arguments=["-booleanvalue:true","-intvalue:2234","-longvalue:3243321312","-floatvalue:3123.32","-doublevalue:3123.32","-stringvalue:TEST","-enumvalue:ENUMVALUE"].toArray(new String[4])
+	}
+
+	@Unroll
+	def "ValidateParameters #arguments for #parameters must fail with empty value"(){
+		println(">>>>> DefaultParameterContainerSpec >>>> ParseParameters $arguments for $parameters must fail with empty value")
+		when:
+			Parameter.parseParameters(parameters,arguments)
+			Parameter.validateParameters(parameters)
+
+		then: 
+			def e=thrown(InvalidParameter)
+			e.getMessage()=="Invalid parameter STRINGVALUE with value semanticFailure: semantic test error requested"
+	
+		where:
+			parameters=StandaloneAppTestParameter.class
+			arguments=["-booleanvalue:true","-intvalue:2234","-longvalue:3243321312","-floatvalue:3123.32","-doublevalue:3123.32","-stringvalue:semanticFailure","-enumvalue:ENUMVALUE"].toArray(new String[4])
 	}
 }
 

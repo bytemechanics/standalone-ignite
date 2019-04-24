@@ -16,9 +16,12 @@
 package org.bytemechanics.standalone.ignite.beans;
 
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Stream;
 import org.bytemechanics.standalone.ignite.Parameter;
+import org.bytemechanics.standalone.ignite.internal.EnumParseExceptionParameter;
 import org.bytemechanics.standalone.ignite.internal.commons.functional.LambdaUnchecker;
 import org.bytemechanics.standalone.ignite.internal.commons.reflection.PrimitiveTypeConverter;
 import org.bytemechanics.standalone.ignite.internal.commons.string.GenericTextParser;
@@ -37,6 +40,8 @@ public class DefaultParameterContainer implements Parameter{
 	private final Class<? extends Object> type;
 	private final String defaultValue;
 	private final Function<String,Object> parser;
+	private final Function<Object,String> validation;
+	private final boolean caseSensitive;
 	private Object value;
 
 	/**
@@ -45,10 +50,12 @@ public class DefaultParameterContainer implements Parameter{
 	 * @param type parameter class (mandatory)
 	 * @param description parameter description (mandatory)
 	 * @param parser parser supplier
+	 * @param validation validation 
+	 * @param caseSensitive flag to indicate that enum parameters parse must be case sensitive. (by default case sensitive)
 	 * @param defaultValue default value
 	 * @param prefixes prefixes available to use for this parameter
 	 */
-	public  DefaultParameterContainer(final String name,final Class<? extends Object> type,final String description,final Function<String,Object> parser,final String defaultValue,final String... prefixes) {
+	public DefaultParameterContainer(final String name,final Class<? extends Object> type,final String description,final Function<String,Object> parser,final Function<Object,String> validation,final boolean caseSensitive,final String defaultValue,final String... prefixes) {
 		if(name==null)
 			throw new NullPointerException("Mandatory \"name\" can not be null");
 		this.name = name;
@@ -60,8 +67,10 @@ public class DefaultParameterContainer implements Parameter{
 		this.type = PrimitiveTypeConverter
 								.convert(type);
 		this.defaultValue=defaultValue;
+		this.caseSensitive=caseSensitive;
+		this.validation=validation;
 		this.parser=Optional.ofNullable(parser)
-										.orElseGet(() -> getDefaultParser((Class<Object>)this.type));
+										.orElseGet(() -> getDefaultParser(this.name,(Class<Object>)this.type,this.caseSensitive));
 		this.value=Optional.ofNullable(this.defaultValue)
 							.map(this::parseParameter)
 							.orElse(null);
@@ -71,16 +80,36 @@ public class DefaultParameterContainer implements Parameter{
 	}
 	
 	
+	private <T> T buildCustomParser(final String _name,final Class<T> _type,final String _value,final boolean _isCaseSensitive) throws ParseException{
+		if(_type.isEnum()){
+			if(_isCaseSensitive){
+				return GenericTextParser.toValue(_type, _value,_type.getName())
+										.orElseThrow(() -> new EnumParseExceptionParameter(_value,_type));
+			}else{
+				return Stream.of(_type.getEnumConstants())
+								.map(enumConstant -> (Enum)enumConstant)
+								.filter(enumConstant -> enumConstant.name().equalsIgnoreCase(_value))
+								.findAny()
+									.map(enumConstant -> (T)enumConstant)
+									.orElseThrow(() -> new EnumParseExceptionParameter(_value,_type));
+			}
+		}else{
+			return GenericTextParser.toValue(_type, _value)
+									.orElseThrow(() -> new ParseException(SimpleFormat.format("Unable to parse value {} for parameter {}",_value,_name),0));
+		}
+	}
+	
 	/**
 	 * Returns the default parser provider from the given class, this provider throws a ParseException if is not possible to parse the value
 	 * @param <T> type to parse
+	 * @param _name parameter name to parse
 	 * @param _type class to parse
+	 * @param _isCaseSensitive flag to indicate that the returning parser must be case sensitive
 	 * @return Parser provider for the given class
 	 */
-	protected <T> Function<String,T> getDefaultParser(final Class<T> _type){
-		return LambdaUnchecker.uncheckedFunction(
-							string -> ((_type.isEnum())? GenericTextParser.toValue(_type, string,_type.getName()) : GenericTextParser.toValue(_type, string))
-										.orElseThrow(() -> new ParseException(SimpleFormat.format("Unable to parse {} with generic parser",string),0)));
+	protected <T> Function<String,T> getDefaultParser(final String _name,final Class<T> _type,final boolean _isCaseSensitive){
+		return LambdaUnchecker.uncheckedFunction( string ->	buildCustomParser(_name,_type,string, _isCaseSensitive));
+										
 	}
 
 	/**
@@ -123,12 +152,25 @@ public class DefaultParameterContainer implements Parameter{
 		return this.parser;
 	}
 
+	@Override
+	public Function<Object, String> getValidation() {
+		return this.validation;
+	}
+
 	/**
 	 * @see Parameter#getValue() 
 	 */
 	@Override
 	public Optional<Object> getValue() {
 		return Optional.ofNullable(this.value);
+	}
+
+	/**
+	 * Flag to indicate if the parser must be case sensitive or unsensitive (only for Enum parameters)
+	 * @return if the parser must be case sensitive or unsensitive
+	 */
+	public boolean isCaseSensitive() {
+		return this.caseSensitive;
 	}
 
 	/**
@@ -151,74 +193,64 @@ public class DefaultParameterContainer implements Parameter{
 	}
 
 
-	@java.lang.SuppressWarnings("all")
 	public static class DefaultParameterContainerBuilder {
-		@java.lang.SuppressWarnings("all")
-		private String name;
-		@java.lang.SuppressWarnings("all")
-		private Class<? extends Object> type;
-		@java.lang.SuppressWarnings("all")
-		private String description;
-		@java.lang.SuppressWarnings("all")
-		private Function<String, Object> parser;
-		@java.lang.SuppressWarnings("all")
-		private String defaultValue;
-		@java.lang.SuppressWarnings("all")
-		private String[] prefixes;
 
-		@java.lang.SuppressWarnings("all")
+		private String name;
+		private Class<? extends Object> type;
+		private String description;
+		private Function<String, Object> parser;
+		private Function<Object,String> validation;
+		private String defaultValue;
+		private String[] prefixes;
+		private boolean caseSensitive;
+
 		DefaultParameterContainerBuilder() {
 		}
 
-		@java.lang.SuppressWarnings("all")
 		public DefaultParameterContainerBuilder name(final String name) {
 			this.name = name;
 			return this;
 		}
-
-		@java.lang.SuppressWarnings("all")
 		public DefaultParameterContainerBuilder type(final Class<? extends Object> type) {
 			this.type = type;
 			return this;
 		}
-
-		@java.lang.SuppressWarnings("all")
 		public DefaultParameterContainerBuilder description(final String description) {
 			this.description = description;
 			return this;
 		}
-
-		@java.lang.SuppressWarnings("all")
 		public DefaultParameterContainerBuilder parser(final Function<String, Object> parser) {
 			this.parser = parser;
 			return this;
 		}
-
-		@java.lang.SuppressWarnings("all")
+		public DefaultParameterContainerBuilder validation(final Function<Object,String> validation) {
+			this.validation = validation;
+			return this;
+		}
 		public DefaultParameterContainerBuilder defaultValue(final String defaultValue) {
 			this.defaultValue = defaultValue;
 			return this;
 		}
-
-		@java.lang.SuppressWarnings("all")
+		public DefaultParameterContainerBuilder caseSensitive(boolean caseSensitive) {
+			this.caseSensitive = caseSensitive;
+			return this;
+		}
 		public DefaultParameterContainerBuilder prefixes(final String[] prefixes) {
 			this.prefixes = prefixes;
 			return this;
 		}
 
-		@java.lang.SuppressWarnings("all")
 		public DefaultParameterContainer build() {
-			return new DefaultParameterContainer(name, type, description, parser, defaultValue, prefixes);
+			return new DefaultParameterContainer(name, type, description, parser,validation,caseSensitive, defaultValue, prefixes);
 		}
 
-		@java.lang.Override
-		@java.lang.SuppressWarnings("all")
+		@Override
 		public java.lang.String toString() {
-			return "DefaultParameterContainer.DefaultParameterContainerBuilder(name=" + this.name + ", type=" + this.type + ", description=" + this.description + ", parser=" + this.parser + ", defaultValue=" + this.defaultValue + ", prefixes=" + java.util.Arrays.deepToString(this.prefixes) + ")";
+			return SimpleFormat.format("DefaultParameterContainer.DefaultParameterContainerBuilder(name={}, type={}, description={}, parser={}, validation={}, caseSensitive={}, defaultValue={}, prefixes={})", 
+										this.name ,this.type,this.description,this.parser,this.validation,this.caseSensitive,this.defaultValue,Arrays.deepToString(this.prefixes));
 		}
 	}
 
-	@java.lang.SuppressWarnings("all")
 	public static DefaultParameterContainerBuilder builder() {
 		return new DefaultParameterContainerBuilder();
 	}	

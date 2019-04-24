@@ -22,26 +22,17 @@ import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
  *
  * @author afarre
  */
-public class UnparseableParameter extends RuntimeException{
+public class InvalidParameter extends RuntimeException{
 	
-	private static final String MESSAGE="Unparseable parameter {} with value {}";
+	private static final String MESSAGE="Invalid parameter {} with value {}: {}";
 	
 	/**
 	 * Mandatory argument not provided exception constructor
 	 * @param _argument necessary argument not provided
 	 * @param _value value
-	 * @param _cause exception cause
+	 * @param _reason failure cause
 	 */
-	public UnparseableParameter(final Parameter _argument,final String _value,final Throwable _cause) {
-		super(SimpleFormat.format(MESSAGE, _argument.name(),_value),_cause);	
-	}
-
-	/**
-	 * Mandatory argument not provided exception constructor
-	 * @param _argument necessary argument not provided
-	 * @param _cause exception cause
-	 */
-	public UnparseableParameter(final Parameter  _argument,final Throwable _cause) {
-		super(SimpleFormat.format("Unparseable parameter {}. {}", _argument.name(), _cause.getMessage()),_cause);	
+	public InvalidParameter(final Parameter _argument,final Object _value,final String _reason) {
+		super(SimpleFormat.format(MESSAGE, _argument.name(),_value,_reason));	
 	}
 }

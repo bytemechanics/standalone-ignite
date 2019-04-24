@@ -27,12 +27,12 @@ import java.nio.file.*
 import java.util.logging.*
 import java.time.*
 import java.time.format.*
-import org.bytemechanics.standalone.ignite.internal.commons.reflection.PrimitiveTypeConverter;
+import org.bytemechanics.standalone.ignite.internal.commons.reflection.PrimitiveTypeConverter
 import org.bytemechanics.standalone.ignite.internal.commons.string.*
 import org.bytemechanics.standalone.ignite.exceptions.MandatoryArgumentNotProvided
 import org.bytemechanics.standalone.ignite.exceptions.UnparseableParameter
 import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat
-
+import org.bytemechanics.standalone.ignite.StandaloneAppTestParameter
 /**
  * @author afarre
  */
@@ -94,7 +94,7 @@ class DefaultParameterContainerSpec extends Specification{
 	def "Constructor must throw NullPointerException if no name is provided"(){
 		println(">>>>> DefaultParameterContainerSpec >>>> Constructor must throw NullPointerException if no name is provided")
 		when:
-			def DefaultParameterContainer container=new DefaultParameterContainer(null,boolean.class,"",null,null);
+			def DefaultParameterContainer container=new DefaultParameterContainer(null,boolean.class,"",null,null,true,null);
 
 		then:
 			def e=thrown(NullPointerException) 
@@ -104,7 +104,7 @@ class DefaultParameterContainerSpec extends Specification{
 	def "Constructor must throw NullPointerException if no type is provided"(){
 		println(">>>>> DefaultParameterContainerSpec >>>> Constructor must throw NullPointerException if no type is provided")
 		when:
-			def DefaultParameterContainer container=new DefaultParameterContainer("name",null,"",null,null);
+			def DefaultParameterContainer container=new DefaultParameterContainer("name",null,"",null,null,true,null);
 
 		then:
 			def e=thrown(NullPointerException) 
@@ -114,7 +114,7 @@ class DefaultParameterContainerSpec extends Specification{
 	def "Constructor must throw NullPointerException if no description is provided"(){
 		println(">>>>> DefaultParameterContainerSpec >>>> Constructor must throw NullPointerException if no type is provided")
 		when:
-			def DefaultParameterContainer container=new DefaultParameterContainer("name",boolean.class,null,null,null);
+			def DefaultParameterContainer container=new DefaultParameterContainer("name",boolean.class,null,null,null,true,null);
 
 		then:
 			def e=thrown(NullPointerException) 
@@ -124,7 +124,7 @@ class DefaultParameterContainerSpec extends Specification{
 	def "Constructor with name and type must be created without problem being mandatory"(){
 		println(">>>>> DefaultParameterContainerSpec >>>> Constructor with name and type must be created without problem being mandatory")
 		when:
-			def DefaultParameterContainer container=new DefaultParameterContainer("name",boolean.class,"description",null,null);
+			def DefaultParameterContainer container=new DefaultParameterContainer("name",boolean.class,"description",null,null,true,null);
 
 		then:
 			container.isMandatory()
@@ -139,7 +139,7 @@ class DefaultParameterContainerSpec extends Specification{
 	def "When new instance created with name:#name,type:#type,parser:null and defaultValue:#defaultValue then the value stored should be the default #parsed one"(){
 		println(">>>>> DefaultParameterContainerSpec >>>> When new instance created with name:$name,type:$type,parser:null and defaultValue:$defaultValue the value stored should be the default $parsed one")
 		when:
-			DefaultParameterContainer container=new DefaultParameterContainer(name,type,"description",null,defaultValue)
+			DefaultParameterContainer container=new DefaultParameterContainer(name,type,"description",null,null,true,defaultValue)
 
 		then: 
 			container.name()==name
@@ -216,7 +216,7 @@ class DefaultParameterContainerSpec extends Specification{
 	def "When new instance created with name:#name,type:#type,parser:null and no default value then when retrieve value should return null"(){
 		println(">>>>> DefaultParameterContainerSpec >>>> When new instance created with name:$name,type:$type,parser:null and no default value then when retrieve value should return null")
 		when:
-			DefaultParameterContainer container=new DefaultParameterContainer(name,type,"description",null,null)
+			DefaultParameterContainer container=new DefaultParameterContainer(name,type,"description",null,null,true,null)
 
 		then: 
 			container.name()==name
@@ -287,6 +287,7 @@ class DefaultParameterContainerSpec extends Specification{
 			typeLoaded=PrimitiveTypeConverter.convert(type)
 	}
 
+		
 	@Unroll
 	def "When custom parser:#parser is provided must be used to parse the defaultValue:#defaultValue provided and resolved as #value"(){
 		println(">>>>> DefaultParameterContainerSpec >>>> When custom parser:$parser is provided must be used to parse the defaultValue:$defaultValue provided and resolved as $value")
@@ -392,6 +393,55 @@ class DefaultParameterContainerSpec extends Specification{
 																				
 			arguments=["-server:other.com","-port:2234","-name:standalone"].toArray(new String[3])
 	}
+	
+	@Unroll
+	def "Parse enum #enumClass with value #value and case sensitive #caseSensitive should result #result"(){
+		println(">>>>> DefaultParameterContainerSpec >>>> Parse enum $enumClass with value $value and case sensitive $caseSensitive should result $result")
+		when:
+			DefaultParameterContainer container=DefaultParameterContainer.builder()
+																			.name("enum-class")
+																			.description("description")
+																			.type(enumClass)
+																			.caseSensitive(caseSensitive)
+																		.build()
+			container.loadParameter(arguments)
+		then: 
+			container.getValue().isPresent()
+			container.getValue().get()==result
+
+		where:
+			enumClass							| value				| caseSensitive				| result
+			StandaloneAppTestParameter.class	| "DOUBLEVALUE"     | true						| StandaloneAppTestParameter.DOUBLEVALUE
+			StandaloneAppTestParameter.class	| "DoubleVALUE"     | false						| StandaloneAppTestParameter.DOUBLEVALUE
+															
+			arguments=["-server:other.com","-port:2234","-name:standalone","-p:/home/user","-enum-class:"+value].toArray(new String[4])
+	}
+
+	@Unroll
+	def "Parse enum #enumClass with value #value and case sensitive #caseSensitive should fail with #message"(){
+		println(">>>>> DefaultParameterContainerSpec >>>> Parse enum $enumClass with value $value and case sensitive $caseSensitive should fail with $message")
+		when:
+			DefaultParameterContainer container=DefaultParameterContainer.builder()
+																			.name("enum-class")
+																			.description("description")
+																			.type(enumClass)
+																			.caseSensitive(caseSensitive)
+																		.build()
+			container.loadParameter(arguments)
+		then: 
+			def e=thrown(UnparseableParameter.class)
+			e.getMessage()==message
+
+		where:
+			enumClass							| value				| caseSensitive				| message
+			StandaloneAppTestParameter.class	| "doublevalue"     | true						| "Unparseable parameter enum-class with value doublevalue"
+			StandaloneAppTestParameter.class	| "DoubleVALUE"     | true						| "Unparseable parameter enum-class with value DoubleVALUE"
+			StandaloneAppTestParameter.class	| "doublevalues"    | false						| "Unparseable parameter enum-class. Unable to parse value doublevalues valid values are [BOOLEANVALUE, INTVALUE, LONGVALUE, FLOATVALUE, DOUBLEVALUE, STRINGVALUE, ENUMVALUE]"
+			StandaloneAppTestParameter.class	| "DoubleVALUEs"    | false						| "Unparseable parameter enum-class. Unable to parse value DoubleVALUEs valid values are [BOOLEANVALUE, INTVALUE, LONGVALUE, FLOATVALUE, DOUBLEVALUE, STRINGVALUE, ENUMVALUE]"
+															
+			arguments=["-server:other.com","-port:2234","-name:standalone","-p:/home/user","-enum-class:"+value].toArray(new String[4])
+	}
+
 																			
 	@Unroll
 	def "Load #name with type:#type,customPrefixes:#prefixes,defaultValue:#defaultValue and parser:#parser from #arguments must load #value"(){
@@ -440,7 +490,7 @@ class DefaultParameterContainerSpec extends Specification{
 			name	| type						| extractedValue	
 			"port"	| int.class					| "22.34"
 			"ip"	| float.class				| "other.com"
-			"path"	| GenericTextParser.class	| "/home/user"		
+			"path"	| double.class				| "/home/user"		
 															
 			arguments=["-ip:other.com","-port:22.34","-name:standalone","-path:/home/user"].toArray(new String[4])
 	}
