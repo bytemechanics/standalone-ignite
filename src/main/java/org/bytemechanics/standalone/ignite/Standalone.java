@@ -163,10 +163,13 @@ public class Standalone{
 	 * @return Standalone instance
 	 */
 	protected Standalone instantiate(){
+		
+		final Standalone self=this;
+		
 		this.instance=Optional.ofNullable(this.supplier)
 								.map(Supplier::get)
 								.orElseThrow(() -> new NullPointerException("Supplier can not be null and must provide a not null instance"));
-		return this;
+		return self;
 	}
 	
 
@@ -177,11 +180,19 @@ public class Standalone{
 	 * @see Runnable
 	 */
 	protected Standalone startup(){
-		Optional.ofNullable(this.instance)
+		
+		final Standalone self=this;
+		
+		try{
+			Optional.ofNullable(this.instance)
 					.map(this::beforeStartupFunction)
 					.map(this::startupFunction)
 					.ifPresent(this::afterStartupFunction);
-		return this;
+		}catch(Exception e){
+			this.instance.startupException(e);
+		}
+		
+		return self;
 	}
 
 	/**
@@ -191,11 +202,19 @@ public class Standalone{
 	 * @see Closeable
 	 */
 	protected Standalone shutdown(){
-		Optional.ofNullable(this.instance)
+		
+		final Standalone self=this;
+		
+		try{
+			Optional.ofNullable(this.instance)
 					.map(this::beforeShutdownFunction)
 					.map(this::shutdownFunction)
 					.ifPresent(this::afterShutdownFunction);
-		return this;
+		}catch(Exception e){
+			this.instance.shutdownException(e);
+		}
+
+		return self;
 	}
 	
 	/**
@@ -204,16 +223,22 @@ public class Standalone{
 	 */
 	protected Standalone parseParameters(){
 		
+		final Standalone self=this;
+		
 		Optional.ofNullable(this.parameters)
 					.ifPresent(par -> Parameter.parseParameters(par, arguments));
-		return this;
+		
+		return self;
 	} 
 
 	protected Standalone validateParameters(){
 		
+		final Standalone self=this;
+		
 		Optional.ofNullable(this.parameters)
 					.ifPresent(par -> Parameter.validateParameters(par));
-		return this;
+		
+		return self;
 	} 
 	
 	/**
@@ -223,6 +248,7 @@ public class Standalone{
 	protected Standalone addShutdownHook(){
 		
 		final Standalone self=this;
+		
 		Runtime
 			.getRuntime()
 				.addShutdownHook(new Thread(this::shutdown));
@@ -276,9 +302,12 @@ public class Standalone{
 	 *   <li>Register shutdown hook</li>
 	 *   <li>Call startup</li>
 	 * </ul>
+	 * @return Standalone instance
 	 * @see Standalone
 	 */
-	public void ignite(){
+	public Standalone ignite(){
+		
+		final Standalone self=this;
 		
 		try{
 			instantiate()
@@ -291,6 +320,8 @@ public class Standalone{
 			this.console.accept(e.getMessage());
 			this.console.accept(Parameter.getHelp(this.parameters));
 		}
+		
+		return self;
 	}
 
 	/**

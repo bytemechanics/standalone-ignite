@@ -173,7 +173,98 @@ class StandaloneSpec extends Specification{
 			arguments=["-booleanvalue:true","-intvalue:2234","-longvalue:3243321312","-floatvalue:3123.32","-doublevalue:3123.32","-stringvalue:semanticFailure","-enumvalue:ENUMVALUE"].toArray(new String[4])
 	}
 
+	def "When exception happens on beforeStartup startupException must be called"(){
+		println(">>>>> StandaloneSpec >>>> When exception happens on beforeStartup startupException must be called")
+		setup:
+			Ignitable ignitable=Mock()
+			Standalone standalone=Standalone.builder()
+												.supplier({ -> ignitable})
+											.build();
 		
+		when:
+			ignitable.beforeStartup() >> { throw new RuntimeException("ouch") }
+			standalone.ignite()
+
+		then: 
+			1 * ignitable.startupException(_)
+	}
+	def "When exception happens on startup startupException must be called"(){
+		println(">>>>> StandaloneSpec >>>> When exception happens on startup startupException must be called")
+		setup:
+			Ignitable ignitable=Mock()
+			Standalone standalone=Standalone.builder()
+												.supplier({ -> ignitable})
+											.build();
+		
+		when:
+			ignitable.startup() >> { throw new RuntimeException("ouch") }
+			standalone.ignite()
+
+		then: 
+			1 * ignitable.startupException(_)
+	}
+	def "When exception happens on afterStartup startupException must be called"(){
+		println(">>>>> StandaloneSpec >>>> When exception happens on afterStartup startupException must be called")
+		setup:
+			Ignitable ignitable=Mock()
+			Standalone standalone=Standalone.builder()
+												.supplier({ -> ignitable})
+											.build();
+		
+		when:
+			ignitable.afterStartup() >> { throw new RuntimeException("ouch") }
+			standalone.ignite()
+
+		then: 
+			1 * ignitable.startupException(_)
+	}
+
+	def "When exception happens on beforeShutdown shutdownException must be called"(){
+		println(">>>>> StandaloneSpec >>>> When exception happens on beforeShutdown shutdownException must be called")
+		setup:
+			Ignitable ignitable=Mock()
+			Standalone standalone=Standalone.builder()
+												.supplier({ -> ignitable})
+											.build();
+		
+		when:
+			ignitable.beforeShutdown() >> { throw new RuntimeException("ouch") }
+			standalone.ignite().shutdown()
+
+		then: 
+			1 * ignitable.shutdownException(_)
+	}
+	def "When exception happens on shutdown shutdownException must be called"(){
+		println(">>>>> StandaloneSpec >>>> When exception happens on shutdown shutdownException must be called")
+		setup:
+			Ignitable ignitable=Mock()
+			Standalone standalone=Standalone.builder()
+												.supplier({ -> ignitable})
+											.build();
+		
+		when:
+			ignitable.shutdown() >> { throw new RuntimeException("ouch") }
+			standalone.ignite().shutdown()
+
+		then: 
+			1 * ignitable.shutdownException(_)
+	}
+	def "When exception happens on afterShutdown shutdownException must be called"(){
+		println(">>>>> StandaloneSpec >>>> When exception happens on afterShutdown shutdownException must be called")
+		setup:
+			Ignitable ignitable=Mock()
+			Standalone standalone=Standalone.builder()
+												.supplier({ -> ignitable})
+											.build();
+		
+		when:
+			ignitable.afterShutdown() >> { throw new RuntimeException("ouch") }
+			standalone.ignite().shutdown()
+
+		then: 
+			1 * ignitable.shutdownException(_)
+	}
+	
 	@Unroll
 	def "Ingnite with name should print a banner with the given #name name and #font font"(){
 		println(">>>>> StandaloneSpec >>>> Ingnite with name should print a banner with the given $name name and $font font")
