@@ -125,6 +125,7 @@ class StandaloneSpec extends Specification{
 			Standalone standalone=Standalone.builder()
 												.supplier({ -> ignitable})
 												.parameters(StandaloneAppTestParameter.class)
+												.parameters(StandaloneAppTestParameter2.class)
 												.arguments(arguments)
 											.build();
 
@@ -145,10 +146,25 @@ class StandaloneSpec extends Specification{
 			StandaloneAppTestParameter.BOOLEANVALUE.getValue(String.class).isPresent()
 			StandaloneAppTestParameter.STRINGVALUE.getValue(String.class).get()=="TEST"
 			StandaloneAppTestParameter.ENUMVALUE.getValue(StandaloneAppTestParameter.class).get()==StandaloneAppTestParameter.ENUMVALUE
+			StandaloneAppTestParameter2.ADDITIONALBOOLEANVALUE.getValue(boolean.class).isPresent()
+			StandaloneAppTestParameter2.ADDITIONALBOOLEANVALUE.getValue(boolean.class).get()==true
+			StandaloneAppTestParameter2.ADDITIONALBOOLEANVALUE.getValue(int.class).isPresent()
+			StandaloneAppTestParameter2.ADDITIONALINTVALUE.getValue(int.class).get()==2234
+			StandaloneAppTestParameter2.ADDITIONALBOOLEANVALUE.getValue(long.class).isPresent()
+			StandaloneAppTestParameter2.ADDITIONALLONGVALUE.getValue(long.class).get()==3243321312
+			StandaloneAppTestParameter2.ADDITIONALBOOLEANVALUE.getValue(float.class).isPresent()
+			StandaloneAppTestParameter2.ADDITIONALFLOATVALUE.getValue(float.class).get()==3123.32f
+			StandaloneAppTestParameter2.ADDITIONALBOOLEANVALUE.getValue(double.class).isPresent()
+			StandaloneAppTestParameter2.ADDITIONALDOUBLEVALUE.getValue(double.class).get()==3123.32d
+			StandaloneAppTestParameter2.ADDITIONALBOOLEANVALUE.getValue(String.class).isPresent()
+			StandaloneAppTestParameter2.ADDITIONALSTRINGVALUE.getValue(String.class).get()=="TEST"
+			StandaloneAppTestParameter2.ADDITIONALENUMVALUE.getValue(StandaloneAppTestParameter.class).get()==StandaloneAppTestParameter2.ADDITIONALENUMVALUE
 	
 		where:
 			parameters=StandaloneAppTestParameter.class
-			arguments=["-booleanvalue:true","-intvalue:2234","-longvalue:3243321312","-floatvalue:3123.32","-doublevalue:3123.32","-stringvalue:TEST","-enumvalue:ENUMVALUE"].toArray(new String[4])
+			arguments=["-booleanvalue:true","-intvalue:2234","-longvalue:3243321312","-floatvalue:3123.32","-doublevalue:3123.32","-stringvalue:TEST","-enumvalue:ENUMVALUE",
+						"-additionalbooleanvalue:true","-additionalintvalue:2234","-additionallongvalue:3243321312","-additionalfloatvalue:3123.32","-additionaldoublevalue:3123.32","-additionalstringvalue:TEST","-additionalenumvalue:ADDITIONALENUMVALUE"]
+					.toArray(new String[4])
 	}
 	@Unroll
 	def "ParseParameters #arguments for #parameters must validate the parameters"(){
@@ -360,6 +376,28 @@ class StandaloneSpec extends Specification{
 		then: 
 			console.poll()==new MandatoryArgumentNotProvided(StandaloneAppTestParameter.BOOLEANVALUE).getMessage()
 			console.poll()==Parameter.getHelp(StandaloneAppTestParameter.class)
+	}
+
+	@Unroll
+	def "If no mandatory parameter of multiple provided show error message and print help"(){
+		println(">>>>> StandaloneSpec >>>> If no mandatory parameter of multiple provided show error message and print help")
+		setup:
+			Ignitable ignitable=Mock()
+			Queue console=new LinkedList();
+			Standalone standalone=Standalone.builder()
+												.supplier({ -> ignitable})
+												.parameters(StandaloneAppTestParameter.class)
+												.parameters(StandaloneAppTestParameter2.class)
+												.console({message -> console.add(message)})
+												.arguments(["-booleanvalue:true","-intvalue:2234","-longvalue:3243321312","-floatvalue:3123.32","-doublevalue:3123.32","-stringvalue:TEST","-enumvalue:ENUMVALUE"].toArray(new String[4]))
+											.build();
+			
+		when:
+			standalone.ignite()
+
+		then: 
+			console.poll()==new MandatoryArgumentNotProvided(StandaloneAppTestParameter2.ADDITIONALBOOLEANVALUE).getMessage()
+			console.poll()==Parameter.getHelp([StandaloneAppTestParameter.class,StandaloneAppTestParameter2.class])
 	}
 }
 

@@ -15,6 +15,7 @@
  */
 package org.bytemechanics.standalone.ignite;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -202,14 +203,29 @@ public interface Parameter {
 
 	/**
 	 * Returns the default help for all parameters of the given parameter class
-	 * @param _parameters parameters enumeration class
+	 * @param _parameterClass parameters enumeration class
 	 * @return returns the list of 
 	 */
-	public static String getHelp(final Class<? extends Enum<? extends Parameter>> _parameters){
+	public static String getHelp(final Class<? extends Enum<? extends Parameter>> _parameterClass){
 
-		return Stream.of(_parameters.getEnumConstants())
+		return getHelp(
+					Stream.of(_parameterClass)
+							.collect(Collectors.toList()));
+	} 
+
+	/**
+	 * Returns the default help for all parameters of the given parameter class
+	 * @param _parameterClasses parameters enumeration classes
+	 * @return returns the list of 
+	 * @since 1.1.0
+	 */
+	public static String getHelp(final List<Class<? extends Enum<? extends Parameter>>> _parameterClasses){
+
+		return _parameterClasses.stream()
+							.map(Class::getEnumConstants)
+							.flatMap(Stream::of)
 							.map(param -> (Parameter)param)
-							.map(param -> param.getHelp())
+							.map(Parameter::getHelp)
 							.collect(Collectors.joining("\n\t","Usage:\n\t","\n"));
 	} 
 }

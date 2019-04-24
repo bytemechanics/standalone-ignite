@@ -21,6 +21,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -46,7 +49,7 @@ public class Standalone{
 	/** supplier for standalone implementation. MANDATORY*/
 	private final Supplier<Ignitable> supplier;
 	/** parameters enumeration class. OPTIONAL */
-	private final Class<? extends Enum<? extends Parameter>> parameters;
+	private final List<Class<? extends Enum<? extends Parameter>>> parameters;
 	/** Arguments from the command line execution. OPTIONAL */
 	private final String[] arguments;
 	/** console consumer by default java.util.logging. OPTIONAL*/
@@ -56,7 +59,7 @@ public class Standalone{
 	private Ignitable instance;
 
 	
-	public Standalone(final Supplier<Ignitable> _supplier,final String _name,final Class<? extends Enum<? extends Parameter>> _parameters,final String[] _arguments,final Consumer<String> _console,final URL _bannerFont){
+	public Standalone(final Supplier<Ignitable> _supplier,final String _name,final List<Class<? extends Enum<? extends Parameter>>> _parameters,final String[] _arguments,final Consumer<String> _console,final URL _bannerFont){
 		if(_supplier==null)
 			throw new NullPointerException("Mandatory \"supplier\" can not be null");
 		this.name=_name;
@@ -225,8 +228,9 @@ public class Standalone{
 		
 		final Standalone self=this;
 		
-		Optional.ofNullable(this.parameters)
-					.ifPresent(par -> Parameter.parseParameters(par, arguments));
+		this.parameters.stream()
+					.filter(param -> param!=null)
+					.forEach(par -> Parameter.parseParameters(par, arguments));
 		
 		return self;
 	} 
@@ -235,8 +239,9 @@ public class Standalone{
 		
 		final Standalone self=this;
 		
-		Optional.ofNullable(this.parameters)
-					.ifPresent(par -> Parameter.validateParameters(par));
+		this.parameters.stream()
+					.filter(param -> param!=null)
+					.forEach(par -> Parameter.validateParameters(par));
 		
 		return self;
 	} 
@@ -352,10 +357,10 @@ public class Standalone{
 		return this.supplier;
 	}
 	/**
-	 * Parameters enumeration class. OPTIONAL
-	 * @return parameters enumeration class. OPTIONAL
+	 * Parameters enumeration classes. OPTIONAL
+	 * @return list of parameters enumeration class. OPTIONAL
 	 */
-	public Class<? extends Enum<? extends Parameter>> getParameters() {
+	public List<Class<? extends Enum<? extends Parameter>>> getParameters() {
 		return this.parameters;
 	}
 	/**
@@ -380,10 +385,14 @@ public class Standalone{
 		private String name;
 		private URL bannerFont;
 		private Supplier<Ignitable> supplier;
-		private Class<? extends Enum<? extends Parameter>> parameters;
+		private List<Class<? extends Enum<? extends Parameter>>> parameters;
 		private String[] arguments;
 		private Consumer<String> console;
 
+		StandaloneBuilder(){
+			this.parameters=new ArrayList<>();
+		}
+		
 		public StandaloneBuilder name(final String _name) {
 			this.name = _name;
 			return this;
@@ -397,7 +406,7 @@ public class Standalone{
 			return this;
 		}
 		public StandaloneBuilder parameters(final Class<? extends Enum<? extends Parameter>> _parameters) {
-			this.parameters = _parameters;
+			this.parameters.add(_parameters);
 			return this;
 		}
 		public StandaloneBuilder arguments(final String[] _arguments) {
@@ -410,7 +419,7 @@ public class Standalone{
 		}
 
 		public Standalone build() {
-			return new Standalone(supplier,name, parameters, arguments,console,bannerFont);
+			return new Standalone(supplier,name,Collections.unmodifiableList(parameters), arguments,console,bannerFont);
 		}
 	}
 
