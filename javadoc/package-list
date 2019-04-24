@@ -1,0 +1,7 @@
+org.bytemechanics.standalone.ignite
+org.bytemechanics.standalone.ignite.beans
+org.bytemechanics.standalone.ignite.exceptions
+org.bytemechanics.standalone.ignite.internal
+org.bytemechanics.standalone.ignite.internal.commons.functional
+org.bytemechanics.standalone.ignite.internal.commons.reflection
+org.bytemechanics.standalone.ignite.internal.commons.string
