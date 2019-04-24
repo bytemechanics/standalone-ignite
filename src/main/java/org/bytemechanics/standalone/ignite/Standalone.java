@@ -24,6 +24,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -229,7 +230,7 @@ public class Standalone{
 		final Standalone self=this;
 		
 		this.parameters.stream()
-					.filter(param -> param!=null)
+					.filter(Objects::nonNull)
 					.forEach(par -> Parameter.parseParameters(par, arguments));
 		
 		return self;
@@ -240,8 +241,8 @@ public class Standalone{
 		final Standalone self=this;
 		
 		this.parameters.stream()
-					.filter(param -> param!=null)
-					.forEach(par -> Parameter.validateParameters(par));
+					.filter(Objects::nonNull)
+					.forEach(Parameter::validateParameters);
 		
 		return self;
 	} 
