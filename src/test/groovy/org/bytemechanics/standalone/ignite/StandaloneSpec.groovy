@@ -404,24 +404,26 @@ class StandaloneSpec extends Specification{
 		println(">>>>> StandaloneSpec >>>> Static extinguish method should do nothing if no instance exist")
 		setup:
 			Standalone standalone=Mock()
+			Standalone.self=null
 			
 		when:
 			Standalone.selfExtinguish(2)
 
 		then: 
-			0 * standalone.extinguish(_)
+			0 * standalone.extinguish(_) >> { }
 	}
+
 	def "Static selfExtinguish method should call the referenced self instance if exist"(){
 		println(">>>>> StandaloneSpec >>>> Static selfExtinguish method should call the referenced self instance if exist")
 		setup:
 			Standalone standalone=Mock()
-			standalone.self=standalone
+			Standalone.self=standalone
 			
 		when:
 			Standalone.selfExtinguish(2)
 
 		then: 
-			1 * standalone.extinguish(2)
+			1 * standalone.extinguish(2) >> { }
 	}
 }
 
