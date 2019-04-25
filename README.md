@@ -35,12 +35,12 @@ dependencies {
 ```
 
 2. Create the standalone application main class
-```
+```Java
 package mypackage;
 ```
 
 3. If some parameters are needed, create an enumerate with all necessary parameters
-```
+```Java
 package mypackage;
 
 import java.util.Optional;
@@ -108,7 +108,7 @@ public enum StandaloneAppTestParameter implements Parameter{
 ```
 
 4. Into your main instantiate Standalone
-```
+```Java
 package mypackage;
 
 import java.util.Optional;
@@ -161,7 +161,7 @@ public final class StandaloneApp implements Ignitable{
 ```
 
 5. Into your main instantiate launch standalone calling ignite() method
-```
+```Java
 package mypackage;
 
 import java.util.Optional;
