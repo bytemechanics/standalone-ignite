@@ -16,6 +16,7 @@ Some times make something so simple as batch generates a lot of boilerplate sour
 JDK8
 
 ## Quick start
+(Please read our [Javadoc](https://standalone-ignite.bytemechanics.org/javadoc/index.html) for further information)
 1. First of all include the Jar file in your compile and execution classpath.
 
 ### Maven
