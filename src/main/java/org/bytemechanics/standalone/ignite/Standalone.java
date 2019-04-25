@@ -42,6 +42,10 @@ import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
  * @author afarre
  */
 public class Standalone{
+
+	/** Latest standalone instantiated */
+	private static Standalone self=null; 
+	
 	
 	/** Standalone name. OPTIONAL*/
 	private final String name;
@@ -60,7 +64,7 @@ public class Standalone{
 	private Ignitable instance;
 
 	
-	public Standalone(final Supplier<Ignitable> _supplier,final String _name,final List<Class<? extends Enum<? extends Parameter>>> _parameters,final String[] _arguments,final Consumer<String> _console,final URL _bannerFont){
+	protected Standalone(final Supplier<Ignitable> _supplier,final String _name,final List<Class<? extends Enum<? extends Parameter>>> _parameters,final String[] _arguments,final Consumer<String> _console,final URL _bannerFont){
 		if(_supplier==null)
 			throw new NullPointerException("Mandatory \"supplier\" can not be null");
 		this.name=_name;
@@ -168,12 +172,12 @@ public class Standalone{
 	 */
 	protected Standalone instantiate(){
 		
-		final Standalone self=this;
+		final Standalone reply=this;
 		
 		this.instance=Optional.ofNullable(this.supplier)
 								.map(Supplier::get)
 								.orElseThrow(() -> new NullPointerException("Supplier can not be null and must provide a not null instance"));
-		return self;
+		return reply;
 	}
 	
 
@@ -185,7 +189,7 @@ public class Standalone{
 	 */
 	protected Standalone startup(){
 		
-		final Standalone self=this;
+		final Standalone reply=this;
 		
 		try{
 			Optional.ofNullable(this.instance)
@@ -196,7 +200,7 @@ public class Standalone{
 			this.instance.startupException(e);
 		}
 		
-		return self;
+		return reply;
 	}
 
 	/**
@@ -207,7 +211,7 @@ public class Standalone{
 	 */
 	protected Standalone shutdown(){
 		
-		final Standalone self=this;
+		final Standalone reply=this;
 		
 		try{
 			Optional.ofNullable(this.instance)
@@ -218,7 +222,7 @@ public class Standalone{
 			this.instance.shutdownException(e);
 		}
 
-		return self;
+		return reply;
 	}
 	
 	/**
@@ -227,24 +231,24 @@ public class Standalone{
 	 */
 	protected Standalone parseParameters(){
 		
-		final Standalone self=this;
+		final Standalone reply=this;
 		
 		this.parameters.stream()
 					.filter(Objects::nonNull)
 					.forEach(par -> Parameter.parseParameters(par, arguments));
 		
-		return self;
+		return reply;
 	} 
 
 	protected Standalone validateParameters(){
 		
-		final Standalone self=this;
+		final Standalone reply=this;
 		
 		this.parameters.stream()
 					.filter(Objects::nonNull)
 					.forEach(Parameter::validateParameters);
 		
-		return self;
+		return reply;
 	} 
 	
 	/**
@@ -253,13 +257,13 @@ public class Standalone{
 	 */
 	protected Standalone addShutdownHook(){
 		
-		final Standalone self=this;
+		final Standalone reply=this;
 		
 		Runtime
 			.getRuntime()
 				.addShutdownHook(new Thread(this::shutdown));
 		
-		return self;
+		return reply;
 	} 
 
 	/**
@@ -268,7 +272,7 @@ public class Standalone{
 	 */
 	protected Standalone printBanner(){
 		
-		final Standalone self=this;
+		final Standalone reply=this;
 		
 		if(this.name!=null){
 			try(InputStream font=this.bannerFont.openStream()){
@@ -298,7 +302,7 @@ public class Standalone{
 			}
 		}
 		
-		return self;
+		return reply;
 	} 
 	
 	/**
@@ -313,7 +317,7 @@ public class Standalone{
 	 */
 	public Standalone ignite(){
 		
-		final Standalone self=this;
+		final Standalone reply=this;
 		
 		try{
 			instantiate()
@@ -327,7 +331,7 @@ public class Standalone{
 			this.console.accept(Parameter.getHelp(this.parameters));
 		}
 		
-		return self;
+		return reply;
 	}
 
 	/**
@@ -383,10 +387,10 @@ public class Standalone{
 	@java.lang.SuppressWarnings("all")
 	public static class StandaloneBuilder {
 
+		private final List<Class<? extends Enum<? extends Parameter>>> parameters;
 		private String name;
 		private URL bannerFont;
 		private Supplier<Ignitable> supplier;
-		private List<Class<? extends Enum<? extends Parameter>>> parameters;
 		private String[] arguments;
 		private Consumer<String> console;
 
@@ -420,7 +424,8 @@ public class Standalone{
 		}
 
 		public Standalone build() {
-			return new Standalone(supplier,name,Collections.unmodifiableList(parameters), arguments,console,bannerFont);
+			Standalone.self=new Standalone(supplier,name,Collections.unmodifiableList(parameters), arguments,console,bannerFont);
+			return Standalone.self;
 		}
 	}
 
@@ -430,5 +435,16 @@ public class Standalone{
 	 */
 	public static StandaloneBuilder builder() {
 		return new StandaloneBuilder();
+	}
+	
+	/**
+	 * Extinguish the <b>latest</b> Standalone instance created. 
+	 * If no instance exist or has been created no action is done.
+	 * @param _returnCode return code to pass to extinguish method
+	 * @see Standalone#extinguish(int) 
+	 */
+	public static void selfExtinguish(final int _returnCode){
+		Optional.ofNullable(Standalone.self)
+				.ifPresent(standaloneInstance -> standaloneInstance.extinguish(_returnCode));
 	}
 }

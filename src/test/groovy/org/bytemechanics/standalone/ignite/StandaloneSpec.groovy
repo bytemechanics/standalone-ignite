@@ -399,5 +399,31 @@ class StandaloneSpec extends Specification{
 			console.poll()==new MandatoryArgumentNotProvided(StandaloneAppTestParameter2.ADDITIONALBOOLEANVALUE).getMessage()
 			console.poll()==Parameter.getHelp([StandaloneAppTestParameter.class,StandaloneAppTestParameter2.class])
 	}
+
+	def "Static selfExtinguish method should do nothing if no instance exist"(){
+		println(">>>>> StandaloneSpec >>>> Static extinguish method should do nothing if no instance exist")
+		setup:
+			Standalone standalone=Mock()
+			Standalone.self=null
+			
+		when:
+			Standalone.selfExtinguish(2)
+
+		then: 
+			0 * standalone.extinguish(_) >> { }
+	}
+
+	def "Static selfExtinguish method should call the referenced self instance if exist"(){
+		println(">>>>> StandaloneSpec >>>> Static selfExtinguish method should call the referenced self instance if exist")
+		setup:
+			Standalone standalone=Mock()
+			Standalone.self=standalone
+			
+		when:
+			Standalone.selfExtinguish(2)
+
+		then: 
+			1 * standalone.extinguish(2) >> { }
+	}
 }
 
