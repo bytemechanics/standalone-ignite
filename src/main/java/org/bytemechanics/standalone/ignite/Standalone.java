@@ -33,7 +33,8 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import org.bytemechanics.standalone.ignite.exceptions.FontNotReadable;
-import org.bytemechanics.standalone.ignite.exceptions.MandatoryArgumentNotProvided;
+import org.bytemechanics.standalone.ignite.exceptions.MandatoryParameterNotProvided;
+import org.bytemechanics.standalone.ignite.exceptions.ParameterException;
 import org.bytemechanics.standalone.ignite.internal.commons.string.Figlet;
 import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
 
@@ -233,9 +234,13 @@ public class Standalone{
 		
 		final Standalone reply=this;
 		
-		this.parameters.stream()
-					.filter(Objects::nonNull)
-					.forEach(par -> Parameter.parseParameters(par, arguments));
+		try{
+			this.parameters.stream()
+							.filter(Objects::nonNull)
+							.forEach(par -> Parameter.parseParameters(par, arguments));
+		}catch(final ParameterException e){
+			this.instance.parameterProcessingException(e);
+		}
 		
 		return reply;
 	} 
@@ -243,11 +248,15 @@ public class Standalone{
 	protected Standalone validateParameters(){
 		
 		final Standalone reply=this;
-		
-		this.parameters.stream()
-					.filter(Objects::nonNull)
-					.forEach(Parameter::validateParameters);
-		
+
+		try{		
+			this.parameters.stream()
+							.filter(Objects::nonNull)
+							.forEach(Parameter::validateParameters);
+		}catch(final ParameterException e){
+			this.instance.parameterProcessingException(e);
+		}
+
 		return reply;
 	} 
 	
@@ -326,7 +335,7 @@ public class Standalone{
 						.validateParameters()
 							.printBanner()
 								.startup();
-		}catch(MandatoryArgumentNotProvided e){
+		}catch(MandatoryParameterNotProvided e){
 			this.console.accept(e.getMessage());
 			this.console.accept(Parameter.getHelp(this.parameters));
 		}
