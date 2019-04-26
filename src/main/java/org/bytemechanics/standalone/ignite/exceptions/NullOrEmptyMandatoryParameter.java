@@ -21,20 +21,22 @@ import org.bytemechanics.standalone.ignite.Parameter;
 import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
 
 /**
- *
+ * Mandatory parameter has been informed empty or null
+ * Renamed from NullOrEmptyMandatoryArgument
  * @author afarre
+ * @since 1.1.2
  */
-public class NullOrEmptyMandatoryArgument extends RuntimeException{
+public class NullOrEmptyMandatoryParameter extends ParameterException{
 	
-	private static final String MESSAGE="Mandatory argument {} is null or empty";
+	private static final String MESSAGE="Mandatory parameter {} is null or empty";
 	
 	/**
-	 * Mandatory argument not provided exception constructor
-	 * @param _argument necessary argument not provided
+	 * Mandatory parameter not provided exception constructor
+	 * @param _parameter necessary parameter not provided
 	 */
-	public NullOrEmptyMandatoryArgument(final Parameter _argument) {
-		super(SimpleFormat.format(MESSAGE, _argument.name(),Stream.of(_argument.getPrefixes())
-																	.map(prefix -> String.valueOf(prefix)+":")
-																	.collect(Collectors.toList())));	
+	public NullOrEmptyMandatoryParameter(final Parameter _parameter) {
+		super(_parameter,SimpleFormat.format(MESSAGE, _parameter.name(),Stream.of(_parameter.getPrefixes())
+																				.map(prefix -> String.valueOf(prefix)+":")
+																				.collect(Collectors.toList())));	
 	}
 }

@@ -15,9 +15,8 @@
  */
 package org.bytemechanics.standalone.ignite;
 
-import java.io.Closeable;
-import java.io.IOException;
 import java.util.Optional;
+import org.bytemechanics.standalone.ignite.exceptions.ParameterException;
 import org.bytemechanics.standalone.ignite.exceptions.ShutdownSystemFailure;
 import org.bytemechanics.standalone.ignite.internal.commons.functional.LambdaUnchecker;
 
@@ -27,6 +26,16 @@ import org.bytemechanics.standalone.ignite.internal.commons.functional.LambdaUnc
  * @since 1.0.0
  */
 public interface Ignitable {
+
+	/**
+	 * Override this method to implement startup exception special treatment; otherwise is rethrown.
+	 * @param <T> exception type
+	 * @param _exception cause
+	 */
+	public default <T extends ParameterException> void parameterProcessingException(final T _exception){
+		Optional.ofNullable(_exception)
+				.ifPresent(LambdaUnchecker.uncheckedConsumer(ex -> {throw ex;}));
+	}
 
 	/**
 	 * Override this method to implement special tasks before startup
@@ -64,14 +73,14 @@ public interface Ignitable {
 	
 	/**
 	 * Override this method to implement special tasks for graceful shutdown.
-	 * If this instance implements Closeable, then the default implementation will call Closeable::close
-	 * @see Closeable
+	 * If this instance implements AutoCloseable, then the default implementation will call AutoCloseable::close
+	 * @see AutoCloseable
 	 */
 	public default void shutdown(){
-		if(this instanceof Closeable){
+		if(this instanceof AutoCloseable){
 			try {
-				((Closeable)this).close();
-			} catch (IOException e) {
+				((AutoCloseable)this).close();
+			} catch (Exception e) {
 				throw new ShutdownSystemFailure(e);
 			}
 		}

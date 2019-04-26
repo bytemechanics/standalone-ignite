@@ -19,20 +19,21 @@ import org.bytemechanics.standalone.ignite.Parameter;
 import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
 
 /**
- *
+ * Parameter is not valid by semantic reasons
  * @author afarre
+ * @since 1.1.1
  */
-public class InvalidParameter extends RuntimeException{
+public class InvalidParameter extends ParameterException{
 	
 	private static final String MESSAGE="Invalid parameter {} with value {}: {}";
 	
 	/**
-	 * Mandatory argument not provided exception constructor
-	 * @param _argument necessary argument not provided
+	 * Invalid parameter
+	 * @param _parameter invalid parameter
 	 * @param _value value
 	 * @param _reason failure cause
 	 */
-	public InvalidParameter(final Parameter _argument,final Object _value,final String _reason) {
-		super(SimpleFormat.format(MESSAGE, _argument.name(),_value,_reason));	
+	public InvalidParameter(final Parameter _parameter,final Object _value,final String _reason) {
+		super(_parameter,SimpleFormat.format(MESSAGE, _parameter.name(),_value,_reason));	
 	}
 }

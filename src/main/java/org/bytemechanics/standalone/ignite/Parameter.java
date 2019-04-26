@@ -21,8 +21,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.bytemechanics.standalone.ignite.exceptions.InvalidParameter;
-import org.bytemechanics.standalone.ignite.exceptions.MandatoryArgumentNotProvided;
-import org.bytemechanics.standalone.ignite.exceptions.NullOrEmptyMandatoryArgument;
+import org.bytemechanics.standalone.ignite.exceptions.MandatoryParameterNotProvided;
+import org.bytemechanics.standalone.ignite.exceptions.NullOrEmptyMandatoryParameter;
 import org.bytemechanics.standalone.ignite.exceptions.UnparseableParameter;
 import org.bytemechanics.standalone.ignite.internal.EnumParseExceptionParameter;
 import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
@@ -111,8 +111,7 @@ public interface Parameter {
 	 * @return the value found without the getPrefix
 	 */
 	public default String findParameter(final String... _args){
-		return Optional.of(
-							Stream.of(_args)
+		return Optional.of(Stream.of(_args)
 									.filter(arg -> Stream.of(getPrefixes())
 														.map(prefix -> prefix+":")
 														.anyMatch(arg::startsWith))
@@ -120,9 +119,9 @@ public interface Parameter {
 									.map(String::trim)
 									.findAny()
 									.orElseGet(() -> getDefaultValue()
-														.orElseThrow(() -> new MandatoryArgumentNotProvided(this))))
+														.orElseThrow(() -> new MandatoryParameterNotProvided(this))))
 						.filter(value -> !value.isEmpty())
-						.orElseThrow(() -> new NullOrEmptyMandatoryArgument(this));
+						.orElseThrow(() -> new NullOrEmptyMandatoryParameter(this));
 	}
 	/**
 	 * Parse the provided value with the given parser supplier

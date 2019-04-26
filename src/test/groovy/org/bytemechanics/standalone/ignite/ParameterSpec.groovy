@@ -27,8 +27,8 @@ import java.util.logging.*
 import java.time.*
 import java.time.format.*
 import org.bytemechanics.standalone.ignite.internal.commons.string.*
-import org.bytemechanics.standalone.ignite.exceptions.MandatoryArgumentNotProvided
-import org.bytemechanics.standalone.ignite.exceptions.NullOrEmptyMandatoryArgument
+import org.bytemechanics.standalone.ignite.exceptions.MandatoryParameterNotProvided
+import org.bytemechanics.standalone.ignite.exceptions.NullOrEmptyMandatoryParameter
 import org.bytemechanics.standalone.ignite.exceptions.InvalidParameter
 import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat
 
@@ -83,7 +83,7 @@ class ParameterSpec extends Specification{
 			Parameter.parseParameters(parameters,arguments)
 
 		then: 
-			def e=thrown(NullOrEmptyMandatoryArgument) 
+			def e=thrown(NullOrEmptyMandatoryParameter) 
 	
 		where:
 			parameters=StandaloneAppTestParameter.class

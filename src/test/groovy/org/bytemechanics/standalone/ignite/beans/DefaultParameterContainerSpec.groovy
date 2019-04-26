@@ -29,7 +29,7 @@ import java.time.*
 import java.time.format.*
 import org.bytemechanics.standalone.ignite.internal.commons.reflection.PrimitiveTypeConverter
 import org.bytemechanics.standalone.ignite.internal.commons.string.*
-import org.bytemechanics.standalone.ignite.exceptions.MandatoryArgumentNotProvided
+import org.bytemechanics.standalone.ignite.exceptions.MandatoryParameterNotProvided
 import org.bytemechanics.standalone.ignite.exceptions.UnparseableParameter
 import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat
 import org.bytemechanics.standalone.ignite.StandaloneAppTestParameter
@@ -370,8 +370,8 @@ class DefaultParameterContainerSpec extends Specification{
 	}
 
 	@Unroll
-	def "Search #name with customPrefixes #prefixes and without defaultValue into #arguments must throw MandatoryArgumentNotProvided exception"(){
-		println(">>>>> DefaultParameterContainerSpec >>>> Search $name with customPrefixes $prefixes and without defaultValue into $arguments must throw MandatoryArgumentNotProvided exception")
+	def "Search #name with customPrefixes #prefixes and without defaultValue into #arguments must throw MandatoryParameterNotProvided exception"(){
+		println(">>>>> DefaultParameterContainerSpec >>>> Search $name with customPrefixes $prefixes and without defaultValue into $arguments must throw MandatoryParameterNotProvided exception")
 		when:
 			def DefaultParameterContainer container=DefaultParameterContainer.builder()
 																				.name(name)
@@ -382,8 +382,8 @@ class DefaultParameterContainerSpec extends Specification{
 			container.findParameter(arguments)
 
 		then: 
-			def e=thrown(MandatoryArgumentNotProvided) 
-			e.getMessage()==new MandatoryArgumentNotProvided(container).getMessage()
+			def e=thrown(MandatoryParameterNotProvided) 
+			e.getMessage()==new MandatoryParameterNotProvided(container).getMessage()
 
 		where:
 			name		| prefixes
