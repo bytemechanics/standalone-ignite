@@ -19,29 +19,30 @@ import org.bytemechanics.standalone.ignite.Parameter;
 import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
 
 /**
- *
+ * Parameter can not be parsed because has wrong format
  * @author afarre
+ * @since 1.0.0
  */
-public class UnparseableParameter extends RuntimeException{
+public class UnparseableParameter extends ParameterException{
 	
 	private static final String MESSAGE="Unparseable parameter {} with value {}";
 	
 	/**
-	 * Mandatory argument not provided exception constructor
-	 * @param _argument necessary argument not provided
+	 * Constructor with the parameter value
+	 * @param _parameter parameter not parseable
 	 * @param _value value
 	 * @param _cause exception cause
 	 */
-	public UnparseableParameter(final Parameter _argument,final String _value,final Throwable _cause) {
-		super(SimpleFormat.format(MESSAGE, _argument.name(),_value),_cause);	
+	public UnparseableParameter(final Parameter _parameter,final String _value,final Throwable _cause) {
+		super(_parameter,SimpleFormat.format(MESSAGE, _parameter.name(),_value),_cause);	
 	}
 
 	/**
-	 * Mandatory argument not provided exception constructor
-	 * @param _argument necessary argument not provided
+	 * Constructor without the parameter value
+	 * @param _parameter parameter not parseable
 	 * @param _cause exception cause
 	 */
-	public UnparseableParameter(final Parameter  _argument,final Throwable _cause) {
-		super(SimpleFormat.format("Unparseable parameter {}. {}", _argument.name(), _cause.getMessage()),_cause);	
+	public UnparseableParameter(final Parameter  _parameter,final Throwable _cause) {
+		super(_parameter,SimpleFormat.format("Unparseable parameter {}. {}", _parameter.name(), _cause.getMessage()),_cause);	
 	}
 }

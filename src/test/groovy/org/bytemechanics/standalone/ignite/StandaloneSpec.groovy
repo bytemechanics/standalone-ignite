@@ -176,11 +176,12 @@ class StandaloneSpec extends Specification{
 												.parameters(StandaloneAppTestParameter.class)
 												.arguments(arguments)
 											.build();
-
+												
 		when:
 			standalone.ignite()
 
 		then: 
+			1 * ignitable.parameterProcessingException(_ as InvalidParameter) >> { ParameterException error -> throw error}
 			def e=thrown(InvalidParameter)
 			e.getMessage()=="Invalid parameter STRINGVALUE with value semanticFailure: semantic test error requested"
 	
@@ -372,9 +373,10 @@ class StandaloneSpec extends Specification{
 			
 		when:
 			standalone.ignite()
-
+			
 		then: 
-			console.poll()==new MandatoryArgumentNotProvided(StandaloneAppTestParameter.BOOLEANVALUE).getMessage()
+			1 * ignitable.parameterProcessingException(_ as MandatoryParameterNotProvided) >> { MandatoryParameterNotProvided error -> throw error}
+			console.poll()==new MandatoryParameterNotProvided(StandaloneAppTestParameter.BOOLEANVALUE).getMessage()
 			console.poll()==Parameter.getHelp(StandaloneAppTestParameter.class)
 	}
 
@@ -396,7 +398,8 @@ class StandaloneSpec extends Specification{
 			standalone.ignite()
 
 		then: 
-			console.poll()==new MandatoryArgumentNotProvided(StandaloneAppTestParameter2.ADDITIONALBOOLEANVALUE).getMessage()
+			1 * ignitable.parameterProcessingException(_ as MandatoryParameterNotProvided) >> { MandatoryParameterNotProvided error -> throw error}
+			console.poll()==new MandatoryParameterNotProvided(StandaloneAppTestParameter2.ADDITIONALBOOLEANVALUE).getMessage()
 			console.poll()==Parameter.getHelp([StandaloneAppTestParameter.class,StandaloneAppTestParameter2.class])
 	}
 

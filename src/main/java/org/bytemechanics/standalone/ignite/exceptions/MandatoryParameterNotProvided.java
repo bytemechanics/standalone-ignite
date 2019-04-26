@@ -21,20 +21,22 @@ import org.bytemechanics.standalone.ignite.Parameter;
 import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
 
 /**
- *
+ * Mandatory parameter has not informed
+ * Renamed from MandatoryArgumentNotProvided
  * @author afarre
+ * @since 1.1.2
  */
-public class MandatoryArgumentNotProvided extends RuntimeException{
+public class MandatoryParameterNotProvided extends ParameterException{
 	
-	private static final String MESSAGE="Mandatory argument {} not provided with anyone of its available prefixes: {}";
+	private static final String MESSAGE="Mandatory parameter {} not provided with anyone of its available prefixes: {}";
 	
 	/**
-	 * Mandatory argument not provided exception constructor
-	 * @param _argument necessary argument not provided
+	 * Mandatory parameter not provided exception constructor
+	 * @param _parameter necessary parameter not provided
 	 */
-	public MandatoryArgumentNotProvided(final Parameter _argument) {
-		super(SimpleFormat.format(MESSAGE, _argument.name(),Stream.of(_argument.getPrefixes())
-																	.map(prefix -> String.valueOf(prefix)+":")
-																	.collect(Collectors.toList())));	
+	public MandatoryParameterNotProvided(final Parameter _parameter) {
+		super(_parameter,SimpleFormat.format(MESSAGE, _parameter.name(),Stream.of(_parameter.getPrefixes())
+																				.map(prefix -> String.valueOf(prefix)+":")
+																				.collect(Collectors.toList())));	
 	}
 }
