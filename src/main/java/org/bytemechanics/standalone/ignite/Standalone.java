@@ -45,7 +45,7 @@ import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
 public class Standalone{
 
 	/** Latest standalone instantiated */
-	private static Standalone self=null; 
+	protected static Standalone self=null; 
 	
 	
 	/** Standalone name. OPTIONAL*/
@@ -455,5 +455,28 @@ public class Standalone{
 	public static void selfExtinguish(final int _returnCode){
 		Optional.ofNullable(Standalone.self)
 				.ifPresent(standaloneInstance -> standaloneInstance.extinguish(_returnCode));
+	}
+
+	/**
+	 * Return the list of parameter classes provided during creation of the <b>latest</b> standalone instantiation or empty list if no parameters added or no standalone instantiated
+	 * @return list of parameter classes provided during creation or empty list if no parameters added or no standalone instantiated
+	 * @see Standalone#getParameters()
+	 */
+	public static List<Class<? extends Enum<? extends Parameter>>> getParametersClasses(){
+		return Optional.ofNullable(Standalone.self)
+						.map(Standalone::getParameters)
+						.orElse(Collections.emptyList());
+	}
+
+	/**
+	 * Return the help for the <b>latest</b> standalone instantiation or empty string if no parameters added or no standalone instantiated
+	 * @return string representing the help for the given parameters or empty string
+	 * @see Parameter#getHelp(java.util.List) 
+	 */
+	public static String getHelp(){
+		return Optional.of(getParametersClasses())
+						.filter(parameters -> !parameters.isEmpty())
+						.map(Parameter::getHelp)
+						.orElse("");
 	}
 }
