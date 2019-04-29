@@ -428,5 +428,90 @@ class StandaloneSpec extends Specification{
 		then: 
 			1 * standalone.extinguish(2) >> { }
 	}
+
+	def "Static getParametersClasses method should return the list of parameter classes provided"(){
+		println(">>>>> StandaloneSpec >>>> Static getParametersClasses method should return the list of parameter classes provided")
+		setup:
+			Standalone standalone=Mock()
+			Standalone.self=standalone
+			standalone.getParameters() >> [StandaloneAppTestParameter.class,StandaloneAppTestParameter2.class]
+			
+		when:
+			def parameters=Standalone.getParametersClasses()
+
+		then: 
+			parameters==[StandaloneAppTestParameter.class,StandaloneAppTestParameter2.class]
+	}
+	
+	def "Static getParametersClasses method should return empty list if not any parameter added"(){
+		println(">>>>> StandaloneSpec >>>> Static getParametersClasses method should return empty list if not any parameter added")
+		setup:
+			Standalone standalone=Mock()
+			Standalone.self=standalone
+			standalone.getParameters() >> []
+			
+		when:
+			def parameters=Standalone.getParametersClasses()
+
+		then: 
+			parameters==[]
+	}
+
+	def "Static getParametersClasses method should return empty list if null parameters"(){
+		println(">>>>> StandaloneSpec >>>> Static getParametersClasses method should return empty list if null parameters")
+		setup:
+			Standalone standalone=Mock()
+			Standalone.self=standalone
+			standalone.getParameters() >> null
+			
+		when:
+			def parameters=Standalone.getParametersClasses()
+
+		then: 
+			parameters==[]
+	}
+
+
+	def "Static getHelp method should return the help of all parameters provided"(){
+		println(">>>>> StandaloneSpec >>>> Static getParametersClasses method should return the help of all parameters provided")
+		setup:
+			Standalone standalone=Mock()
+			Standalone.self=standalone
+			standalone.getParameters() >> [StandaloneAppTestParameter.class,StandaloneAppTestParameter2.class]
+			
+		when:
+			def help=Standalone.getHelp()
+
+		then: 
+			help==Parameter.getHelp([StandaloneAppTestParameter.class,StandaloneAppTestParameter2.class])
+	}
+	
+	def "Static getHelp method should return empty string if not any parameter added"(){
+		println(">>>>> StandaloneSpec >>>> Static getParametersClasses method should return empty string if not any parameter added")
+		setup:
+			Standalone standalone=Mock()
+			Standalone.self=standalone
+			standalone.getParameters() >> []
+			
+		when:
+			def help=Standalone.getHelp()
+
+		then: 
+			help==""
+	}
+
+	def "Static getHelp method should return empty string if null parameters"(){
+		println(">>>>> StandaloneSpec >>>> Static getParametersClasses method should return empty string if null parameters")
+		setup:
+			Standalone standalone=Mock()
+			Standalone.self=standalone
+			standalone.getParameters() >> null
+			
+		when:
+			def help=Standalone.getHelp()
+
+		then: 
+			help==""
+	}
 }
 

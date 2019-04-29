@@ -45,7 +45,7 @@ import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
 public class Standalone{
 
 	/** Latest standalone instantiated */
-	private static Standalone self=null; 
+	protected static Standalone self=null; 
 	
 	
 	/** Standalone name. OPTIONAL*/
@@ -455,5 +455,18 @@ public class Standalone{
 	public static void selfExtinguish(final int _returnCode){
 		Optional.ofNullable(Standalone.self)
 				.ifPresent(standaloneInstance -> standaloneInstance.extinguish(_returnCode));
+	}
+
+	public static List<Class<? extends Enum<? extends Parameter>>> getParametersClasses(){
+		return Optional.ofNullable(Standalone.self)
+						.map(Standalone::getParameters)
+						.orElse(Collections.emptyList());
+	}
+
+	public static String getHelp(){
+		return Optional.of(getParametersClasses())
+						.filter(parameters -> !parameters.isEmpty())
+						.map(Parameter::getHelp)
+						.orElse("");
 	}
 }
