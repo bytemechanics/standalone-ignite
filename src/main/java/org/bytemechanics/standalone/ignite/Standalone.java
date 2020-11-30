@@ -62,13 +62,13 @@ public class Standalone{
 	/** Arguments from the command line execution. OPTIONAL */
 	private final String[] arguments;
 	/** console consumer by default java.util.logging. OPTIONAL*/
-	private final Consumer<String> console;
+	private final Console console;
 
 	/** Internal ignitable instance */
 	private Ignitable instance;
 
 	
-	protected Standalone(final Supplier<Ignitable> _supplier,final String _name,final boolean _showBanner,final List<Class<? extends Enum<? extends Parameter>>> _parameters,final String[] _arguments,final Consumer<String> _console,final URL _bannerFont){
+	protected Standalone(final Supplier<Ignitable> _supplier,final String _name,final boolean _showBanner,final List<Class<? extends Enum<? extends Parameter>>> _parameters,final String[] _arguments,final Consumer<String> _console,final URL _bannerFont,final boolean _verbose){
 		if(_supplier==null)
 			throw new NullPointerException("Mandatory \"supplier\" can not be null");
 		this.name=_name;
@@ -78,7 +78,7 @@ public class Standalone{
 		this.arguments=((_arguments==null)||_arguments.length==0)? new String[0] : _arguments;
 		this.parameters=_parameters;
 		this.instance=null;
-		this.console=(_console!=null)? _console : getDefaultConsole();
+		this.console=new Console((_console!=null)? _console : getDefaultConsole(),_verbose);
 	}
 	
 	
@@ -307,14 +307,14 @@ public class Standalone{
 			try(InputStream font=this.bannerFont.openStream()){
 				Figlet figlet=new Figlet(font, Charset.forName("UTF-8"));
 				String banner=figlet.print(this.name);
-				this.console.accept(figlet.line(this.name,'='));
-				this.console.accept(banner);
-				this.console.accept(figlet.line(this.name,'-'));
-				this.console.accept(SimpleFormat.format("\tJVM: {}",System.getProperty("java.version")));
-				this.console.accept(SimpleFormat.format("\tCores: {}",Runtime.getRuntime().availableProcessors()));
-				this.console.accept(SimpleFormat.format("\tMemory (bytes): {}/{}",Runtime.getRuntime().totalMemory(),Runtime.getRuntime().maxMemory()));
-				this.console.accept(SimpleFormat.format("\tBase path: {}", new File(".").getCanonicalPath()));
-				this.console.accept(SimpleFormat.format("\tVersion: {}/{}",
+				this.console.info(figlet.line(this.name,'='));
+				this.console.info(banner);
+				this.console.info(figlet.line(this.name,'-'));
+				this.console.info(SimpleFormat.format("\tJVM: {}",System.getProperty("java.version")));
+				this.console.info(SimpleFormat.format("\tCores: {}",Runtime.getRuntime().availableProcessors()));
+				this.console.info(SimpleFormat.format("\tMemory (bytes): {}/{}",Runtime.getRuntime().totalMemory(),Runtime.getRuntime().maxMemory()));
+				this.console.info(SimpleFormat.format("\tBase path: {}", new File(".").getCanonicalPath()));
+				this.console.info(SimpleFormat.format("\tVersion: {}/{}",
 															Optional.of(this.instance)
 																		.map(Object::getClass)
 																		.map(Class::getPackage)
@@ -325,7 +325,7 @@ public class Standalone{
 																		.map(Class::getPackage)
 																		.map(Package::getImplementationVersion)
 																		.orElse("unknown")));
-				this.console.accept(figlet.line(this.name,'='));
+				this.console.info(figlet.line(this.name,'='));
 			} catch (IOException e) {
 				throw new FontNotReadable(this.bannerFont,e);
 			}
@@ -356,8 +356,8 @@ public class Standalone{
 							.printBanner()
 								.startup();
 		}catch(MandatoryParameterNotProvided e){
-			this.console.accept(e.getMessage());
-			this.console.accept(Parameter.getHelp(this.parameters));
+			this.console.error(e.getMessage());
+			this.console.error(Parameter.getHelp(this.parameters));
 		}
 		
 		return reply;
@@ -420,6 +420,13 @@ public class Standalone{
 		return this.instance;
 	}
 
+	/**
+	 * Return the configured console
+	 * @return the configured console
+	 */
+	public Console getConsole(){
+		return this.console;
+	}
 
 	/** Standalone builder helper class */
 	@java.lang.SuppressWarnings("all")
@@ -431,6 +438,7 @@ public class Standalone{
 		private URL bannerFont;
 		private Supplier<Ignitable> supplier;
 		private String[] arguments;
+		private boolean verbose=false;
 		private Consumer<String> console;
 
 		StandaloneBuilder(){
@@ -486,6 +494,16 @@ public class Standalone{
 			this.arguments = _arguments;
 			return this;
 		}
+
+		/**
+		* Verbose flag (default: false)
+		* @return StandaloneBuilder to chain other properties
+		*/
+		public StandaloneBuilder verbose(final boolean _verbose) {
+			this.verbose = _verbose;
+			return this;
+		}
+		
 		/**
 		* Console consumer where to write banner and standalone ignite default logs
 		* @return StandaloneBuilder to chain other properties
@@ -496,7 +514,7 @@ public class Standalone{
 		}
 
 		public Standalone build() {
-			Standalone.self=new Standalone(supplier,name,showBanner,Collections.unmodifiableList(parameters), arguments,console,bannerFont);
+			Standalone.self=new Standalone(supplier,name,showBanner,Collections.unmodifiableList(parameters), arguments,console,bannerFont,verbose);
 			return Standalone.self;
 		}
 	}

@@ -630,7 +630,7 @@ public class StandaloneTest {
 		
 		AtomicBoolean called=new AtomicBoolean(false);
 		
-		Standalone.self=new Standalone(() -> _ignitable, null, true, null, null, null, null){
+		Standalone.self=new Standalone(() -> _ignitable, null, true, null, null, null, null,false){
 			@Override
 			public void extinguish(int _exitCode) {
 				Assertions.assertEquals(2,_exitCode);
@@ -648,7 +648,7 @@ public class StandaloneTest {
 		
 		final List parameters=Stream.of(StandaloneAppTestParameter.class,StandaloneAppTestParameter2.class).collect(Collectors.toList());
 		
-		Standalone.self=new Standalone(() -> _ignitable, null, true, parameters, null, null, null);
+		Standalone.self=new Standalone(() -> _ignitable, null, true, parameters, null, null, null,false);
 
 		List actualParameters=Standalone.getParametersClasses();
 			
@@ -661,7 +661,7 @@ public class StandaloneTest {
 	public void getEmptyParameters(final @Mocked Ignitable _ignitable){
 		
 		final List parameters=Collections.emptyList();
-		Standalone.self=new Standalone(() -> _ignitable, null, true, parameters, null, null, null);
+		Standalone.self=new Standalone(() -> _ignitable, null, true, parameters, null, null, null,false);
 		
 		List actualParameters=Standalone.getParametersClasses();
 			
@@ -673,7 +673,7 @@ public class StandaloneTest {
 	public void getNullParameters(final @Mocked Ignitable _ignitable){
 		
 		final List parameters=Collections.emptyList();
-		Standalone.self=new Standalone(() -> _ignitable, null, true, null, null, null, null);
+		Standalone.self=new Standalone(() -> _ignitable, null, true, null, null, null, null,false);
 		
 		List actualParameters=Standalone.getParametersClasses();
 			
@@ -686,7 +686,7 @@ public class StandaloneTest {
 	public void getHelp(final @Mocked Ignitable _ignitable){
 		
 		final List parameters=Stream.of(StandaloneAppTestParameter.class,StandaloneAppTestParameter2.class).collect(Collectors.toList());
-		Standalone.self=new Standalone(() -> _ignitable, null, true, parameters, null, null, null);
+		Standalone.self=new Standalone(() -> _ignitable, null, true, parameters, null, null, null,false);
 		
 		String actualHelp=Standalone.getHelp();
 			
@@ -699,7 +699,7 @@ public class StandaloneTest {
 	public void getEmptyHelp(final @Mocked Ignitable _ignitable){
 		
 		final List parameters=Collections.emptyList();
-		Standalone.self=new Standalone(() -> _ignitable, null, true, parameters, null, null, null);
+		Standalone.self=new Standalone(() -> _ignitable, null, true, parameters, null, null, null,false);
 		
 		String actualHelp=Standalone.getHelp();
 			
@@ -710,10 +710,31 @@ public class StandaloneTest {
 	@DisplayName("Static getHelp method should return empty string if null parameters")
 	public void getNullHelp(final @Mocked Ignitable _ignitable){
 		
-		Standalone.self=new Standalone(() -> _ignitable, null, true, null, null, null, null);
+		Standalone.self=new Standalone(() -> _ignitable, null, true, null, null, null, null,false);
 
 		String actualHelp=Standalone.getHelp();
 			
 		Assertions.assertEquals("", actualHelp);
+	}
+	
+	@Test
+	@DisplayName("Console can be overrided and used")
+	@SuppressWarnings("unchecked")
+	public void consoleTest(final @Mocked Ignitable _ignitable){
+		
+		Queue console=new LinkedList();
+		Standalone standalone=Standalone.builder()
+														.supplier(() -> _ignitable)
+														.console(message -> console.add(message))
+														.verbose(true)
+													.build();
+
+		standalone.getConsole().info("info-message-1");
+		standalone.getConsole().error("error-message-2");
+		standalone.getConsole().verbose("verbose-message-3");
+			
+		Assertions.assertEquals("info-message-1", console.poll());
+		Assertions.assertEquals("error-message-2", console.poll());
+		Assertions.assertEquals("verbose-message-3", console.poll());
 	}
 }
