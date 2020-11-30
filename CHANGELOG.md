@@ -10,3 +10,5 @@
 * #36 Parameter should have a get method to get the value without Optional usage
 * #14 Make enum parameter parser able to parse non-case sensitive value 
 * #34 If Ignitable implements Autocloseable Standalone should invoke close 
+* #37 Console abstraction to log startup messages 
+* #35 Parameter interface should have a validate method to override by semantic validations 

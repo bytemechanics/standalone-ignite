@@ -32,29 +32,29 @@ public enum StandaloneAppTestParameter implements Parameter{
 	LONGVALUE(long.class,"long value"),
 	FLOATVALUE(float.class,"float value"),
 	DOUBLEVALUE(double.class,"double value"),
-	STRINGVALUE(String.class,"string value",val -> 
-													(val.equals("semanticFailure")? 
-													"semantic test error requested" 
-													: null)),
+	STRINGVALUE(String.class,"string value"){
+		@Override
+		public void validate(Object _value) throws Exception {
+			if(_value.equals("semanticFailure")){
+				throw new Exception("semantic test error requested");
+			}
+		}
+	},
 	ENUMVALUE(StandaloneAppTestParameter.class,"string value"),
 	;
 	
 	private final DefaultParameterContainer container;
 	
 	<T extends Object> StandaloneAppTestParameter(final Class<T> _type,final String _description){
-		this(_type,_description,null,null,null);
+		this(_type,_description,null,null);
 	}
 	<T extends Object> StandaloneAppTestParameter(final Class<T> _type,final String _description,final String _default){
-		this(_type,_description,_default,null,null);
+		this(_type,_description,_default,null);
 	}
-	<T extends Object> StandaloneAppTestParameter(final Class<T> _type,final String _description,final Function<Object,String> _validation){
-		this(_type,_description,null,null,_validation);
-	}
-	<T extends Object> StandaloneAppTestParameter(final Class<T> _type,final String _description,final String _default,final Function<String,T> _parser,final Function<Object,String> _validation){
+	<T extends Object> StandaloneAppTestParameter(final Class<T> _type,final String _description,final String _default,final Function<String,T> _parser){
 		this.container=DefaultParameterContainer.builder()
 												.name(name())
 												.type(_type)
-												.validation(_validation)
 												.description(_description)
 												.defaultValue(_default)
 												.parser((Function<String,Object>)_parser)
@@ -79,11 +79,6 @@ public enum StandaloneAppTestParameter implements Parameter{
 	@Override
 	public Parameter setValue(Object _value) {
 		return this.container.setValue(_value);
-	}
-
-	@Override
-	public Function<Object, String> getValidation() {
-		return this.container.getValidation();
 	}
 
 	@Override

@@ -68,14 +68,29 @@ public interface Parameter {
 	public default boolean isMandatory(){
 		return !getDefaultValue().isPresent();
 	}
+	
+	/**
+	 * Semantic validation after correct parameters parse is done when the validation method is executed all parameters has its values
+	 * @return function to validate semantically the parameter if valid returns null otherwise the error description
+	 * @since 1.1.0
+	 */
+	public default void validate(final Object _value) throws Exception{
+	}
 	/**
 	 * Semantic validation after correct parameters parse is done when the validation method is executed all parameters has its values
 	 * @return function to validate semantically the parameter if valid returns null otherwise the error description
 	 * @since 1.1.0
 	 */
 	public default Function<Object,String> getValidation(){
-		return null;
-	}
+		return (value) -> {
+									try{
+										validate(value);
+										return null;
+									}catch(Exception e){
+										return e.getMessage();
+									}
+								};
+	 }
 	
 	/**
 	 * Returns the description for this parameter
