@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.bytemechanics.standalone.ignite;
+package org.bytemechanics.standalone.ignite.mocks;
 
 import java.util.Optional;
 import java.util.function.Function;
+import org.bytemechanics.standalone.ignite.Parameter;
 import org.bytemechanics.standalone.ignite.beans.DefaultParameterContainer;
 
 /**
@@ -42,12 +43,10 @@ public enum StandaloneAppTestParameter2 implements Parameter{
 	<T extends Object> StandaloneAppTestParameter2(final Class<T> _type,final String _description){
 		this(_type,_description,null,null,null);
 	}
-	<T extends Object> StandaloneAppTestParameter2(final Class<T> _type,final String _description,final String _default){
-		this(_type,_description,_default,null,null);
-	}
 	<T extends Object> StandaloneAppTestParameter2(final Class<T> _type,final String _description,final Function<Object,String> _validation){
 		this(_type,_description,null,null,_validation);
 	}
+	@SuppressWarnings("unchecked")
 	<T extends Object> StandaloneAppTestParameter2(final Class<T> _type,final String _description,final String _default,final Function<String,T> _parser,final Function<Object,String> _validation){
 		this.container=DefaultParameterContainer.builder()
 												.name(name())

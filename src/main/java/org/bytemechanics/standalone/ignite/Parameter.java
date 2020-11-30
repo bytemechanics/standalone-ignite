@@ -94,6 +94,7 @@ public interface Parameter {
 	 * @param _class the class to be casted to
 	 * @return an optional of the value casted to the given class
 	 */
+	@SuppressWarnings("unchecked")
 	public default <T> Optional<T> getValue(final Class<T> _class){
 		return getValue()
 					.map(value -> (T)value);

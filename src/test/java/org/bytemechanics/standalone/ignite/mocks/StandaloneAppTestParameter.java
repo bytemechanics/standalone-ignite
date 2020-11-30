@@ -13,16 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.bytemechanics.standalone.ignite;
+package org.bytemechanics.standalone.ignite.mocks;
 
 import java.util.Optional;
 import java.util.function.Function;
+import org.bytemechanics.standalone.ignite.Parameter;
 import org.bytemechanics.standalone.ignite.beans.DefaultParameterContainer;
 
 /**
  *
  * @author afarre
  */
+@SuppressWarnings("unchecked")
 public enum StandaloneAppTestParameter implements Parameter{
 
 	BOOLEANVALUE(boolean.class,"boolean value"),

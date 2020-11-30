@@ -50,6 +50,8 @@ public class Standalone{
 	
 	/** Standalone name. OPTIONAL*/
 	private final String name;
+	/** Banner. OPTIONAL (default active)*/
+	private final boolean showBanner;
 	/** Banner font. OPTIONAL*/
 	private final URL bannerFont;
 	/** supplier for standalone implementation. MANDATORY*/
@@ -65,10 +67,11 @@ public class Standalone{
 	private Ignitable instance;
 
 	
-	protected Standalone(final Supplier<Ignitable> _supplier,final String _name,final List<Class<? extends Enum<? extends Parameter>>> _parameters,final String[] _arguments,final Consumer<String> _console,final URL _bannerFont){
+	protected Standalone(final Supplier<Ignitable> _supplier,final String _name,final boolean _showBanner,final List<Class<? extends Enum<? extends Parameter>>> _parameters,final String[] _arguments,final Consumer<String> _console,final URL _bannerFont){
 		if(_supplier==null)
 			throw new NullPointerException("Mandatory \"supplier\" can not be null");
 		this.name=_name;
+		this.showBanner=_showBanner;
 		this.bannerFont=(_bannerFont!=null)? _bannerFont : ClassLoader.getSystemResource("standard.flf");
 		this.supplier=_supplier;
 		this.arguments=((_arguments==null)||_arguments.length==0)? new String[0] : _arguments;
@@ -283,7 +286,7 @@ public class Standalone{
 		
 		final Standalone reply=this;
 		
-		if(this.name!=null){
+		if((this.showBanner)&&(this.name!=null)){
 			try(InputStream font=this.bannerFont.openStream()){
 				Figlet figlet=new Figlet(font, Charset.forName("UTF-8"));
 				String banner=figlet.print(this.name);
@@ -364,6 +367,14 @@ public class Standalone{
 	}
 
 	/**
+	 * Standalone show banner flag. OPTIONAL (default true)
+	 * @return Standalone show banner flag
+	 */
+	public boolean isShowBanner() {
+		return showBanner;
+	}
+
+	/**
 	 * Supplier for standalone implementation. MANDATORY
 	 * @return supplier for standalone implementation. MANDATORY
 	 */
@@ -393,11 +404,13 @@ public class Standalone{
 	}
 
 
+	/** Standalone builder helper class */
 	@java.lang.SuppressWarnings("all")
 	public static class StandaloneBuilder {
 
 		private final List<Class<? extends Enum<? extends Parameter>>> parameters;
 		private String name;
+		private boolean showBanner=true;
 		private URL bannerFont;
 		private Supplier<Ignitable> supplier;
 		private String[] arguments;
@@ -407,33 +420,66 @@ public class Standalone{
 			this.parameters=new ArrayList<>();
 		}
 		
+		/**
+		* Standalone name. If present banner is printed at console. OPTIONAL
+		* @return StandaloneBuilder to chain other properties
+		*/
 		public StandaloneBuilder name(final String _name) {
 			this.name = _name;
 			return this;
 		}
+		/**
+		* Show banner. flag to activate the banner, by default is active but is only shown if the standalone has assigned name
+		* @return StandaloneBuilder to chain other properties
+		* @see StandaloneBuilder#name(java.lang.String) 
+		*/
+		public StandaloneBuilder showBanner(final boolean _showBanner) {
+			this.showBanner = _showBanner;
+			return this;
+		}
+		/**
+		* Baner font. Figlet font file URL by defautl use embeded standard.flf font.
+		* @return StandaloneBuilder to chain other properties
+		*/
 		public StandaloneBuilder bannerFont(final URL _bannerFont) {
 			this.bannerFont = _bannerFont;
 			return this;
 		}
+		/**
+		* Ignitable supplier to provide the ignitable instance (MANDATORY)
+		* @return StandaloneBuilder to chain other properties
+		*/
 		public StandaloneBuilder supplier(final Supplier<Ignitable> _supplier) {
 			this.supplier = _supplier;
 			return this;
 		}
+		/**
+		* Parameters to load from the arguments. Can be invoked several times and will load every enum requested
+		* @return StandaloneBuilder to chain other properties
+		*/
 		public StandaloneBuilder parameters(final Class<? extends Enum<? extends Parameter>> _parameters) {
 			this.parameters.add(_parameters);
 			return this;
 		}
+		/**
+		* Arguments reveived to parse as parameters
+		* @return StandaloneBuilder to chain other properties
+		*/
 		public StandaloneBuilder arguments(final String[] _arguments) {
 			this.arguments = _arguments;
 			return this;
 		}
+		/**
+		* Console consumer where to write banner and standalone ignite default logs
+		* @return StandaloneBuilder to chain other properties
+		*/
 		public StandaloneBuilder console(final Consumer<String> _console) {
 			this.console = _console;
 			return this;
 		}
 
 		public Standalone build() {
-			Standalone.self=new Standalone(supplier,name,Collections.unmodifiableList(parameters), arguments,console,bannerFont);
+			Standalone.self=new Standalone(supplier,name,showBanner,Collections.unmodifiableList(parameters), arguments,console,bannerFont);
 			return Standalone.self;
 		}
 	}
