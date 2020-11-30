@@ -9,3 +9,4 @@
 * #38 Add flag to disable banner
 * #36 Parameter should have a get method to get the value without Optional usage
 * #14 Make enum parameter parser able to parse non-case sensitive value 
+* #34 If Ignitable implements Autocloseable Standalone should invoke close 

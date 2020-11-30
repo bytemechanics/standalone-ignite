@@ -107,6 +107,27 @@ public class StandaloneTest {
 	}	
 
 	@Test
+	@DisplayName("On Autocloseable Ignitables must call close after shutdown")
+	public <AutoCloseableIgnitable extends AutoCloseable & Ignitable> void igniteStartupAutoCloseable(final @Mocked AutoCloseableIgnitable _ignitable) throws Exception {
+
+		new Expectations() {{
+			_ignitable.beforeStartup(); times=1;
+			_ignitable.startup(); times=1;
+			_ignitable.afterStartup(); times=1;
+			_ignitable.beforeShutdown(); times=1;
+			_ignitable.shutdown(); times=1;
+			_ignitable.afterShutdown(); times=1;
+			_ignitable.close(); times=1;
+		}};
+		
+		Standalone.builder()
+							.supplier(() -> _ignitable)
+						.build()
+							.ignite()
+							.shutdown();
+	}	
+
+	@Test
 	@DisplayName("ParseParameters must do nothing if no parameters defined")
 	public void igniteNoParameters(final @Mocked Ignitable _ignitable) {
 
@@ -214,6 +235,25 @@ public class StandaloneTest {
 							.ignite();
 	}
 	@Test
+	@DisplayName("On Autocloseable Ignitables must call close after startupException on beforeStartup Errors")
+	public <AutoCloseableIgnitable extends AutoCloseable & Ignitable> void autocloseableIgniteBeforeStartupException(final @Mocked AutoCloseableIgnitable _ignitable) throws Exception {
+
+		Exception expectedException=new RuntimeException("ouch");
+		
+		new Expectations() {{
+			_ignitable.beforeStartup(); times=1; result=expectedException;
+			_ignitable.startup(); times=0;
+			_ignitable.afterStartup(); times=0;
+			_ignitable.startupException(expectedException); times=1;
+			_ignitable.close(); times=1;
+		}};
+		
+		Standalone.builder()
+							.supplier(() -> _ignitable)
+						.build()
+							.ignite();
+	}	
+	@Test
 	@DisplayName("When exception happens on startup then startupException must be called")
 	public void igniteStartupException(final @Mocked Ignitable _ignitable) {
 
@@ -231,6 +271,25 @@ public class StandaloneTest {
 						.build()
 							.ignite();
 	}
+	@Test
+	@DisplayName("On Autocloseable Ignitables must call close after startupException on startup Errors")
+	public <AutoCloseableIgnitable extends AutoCloseable & Ignitable> void autocloseableIgniteStartupException(final @Mocked AutoCloseableIgnitable _ignitable) throws Exception {
+
+		Exception expectedException=new RuntimeException("ouch");
+		
+		new Expectations() {{
+			_ignitable.beforeStartup(); times=1; 
+			_ignitable.startup(); times=1; result=expectedException; 
+			_ignitable.afterStartup(); times=0;
+			_ignitable.startupException(expectedException); times=1;
+			_ignitable.close(); times=1;
+		}};
+		
+		Standalone.builder()
+							.supplier(() -> _ignitable)
+						.build()
+							.ignite();
+	}	
 
 	@Test
 	@DisplayName("When exception happens on afterStartup then startupException must be called")
@@ -250,7 +309,26 @@ public class StandaloneTest {
 						.build()
 							.ignite();
 	}
+	@Test
+	@DisplayName("On Autocloseable Ignitables must call close after startupException on afterStartup Errors")
+	public <AutoCloseableIgnitable extends AutoCloseable & Ignitable> void autocloseableIgniteAfterStartupException(final @Mocked AutoCloseableIgnitable _ignitable) throws Exception {
 
+		Exception expectedException=new RuntimeException("ouch");
+		
+		new Expectations() {{
+			_ignitable.beforeStartup(); times=1; 
+			_ignitable.startup(); times=1; 
+			_ignitable.afterStartup(); times=1; result=expectedException; 
+			_ignitable.startupException(expectedException); times=1;
+			_ignitable.close(); times=1;
+		}};
+		
+		Standalone.builder()
+							.supplier(() -> _ignitable)
+						.build()
+							.ignite();
+	}	
+	
 	@Test
 	@DisplayName("When exception happens on beforeShutdown then shutdownException must be called")
 	public void igniteBeforeShutdownException(final @Mocked Ignitable _ignitable) {
@@ -273,10 +351,32 @@ public class StandaloneTest {
 							.ignite()
 							.shutdown();
 	}	
+	@Test
+	@DisplayName("On Autocloseable Ignitables must call close after shutdownException on beforeShutdown Errors")
+	public <AutoCloseableIgnitable extends AutoCloseable & Ignitable> void autocloseableIgniteBeforeShutdownException(final @Mocked AutoCloseableIgnitable _ignitable) throws Exception {
 
+		Exception expectedException=new RuntimeException("ouch");
+		
+		new Expectations() {{
+			_ignitable.beforeStartup(); times=1;
+			_ignitable.startup(); times=1; 
+			_ignitable.afterStartup(); times=1;
+			_ignitable.beforeShutdown(); times=1; result=expectedException;
+			_ignitable.shutdown(); times=0;
+			_ignitable.afterShutdown(); times=0;
+			_ignitable.shutdownException(expectedException); times=1;
+			_ignitable.close(); times=1;
+		}};
+		
+		Standalone.builder()
+							.supplier(() -> _ignitable)
+						.build()
+							.ignite()
+							.shutdown();
+	}	
 
 	@Test
-	@DisplayName("When exception happens onshutdown then shutdownException must be called")
+	@DisplayName("When exception happens on shutdown then shutdownException must be called")
 	public void igniteShutdownException(final @Mocked Ignitable _ignitable) {
 
 		Exception expectedException=new RuntimeException("ouch");
@@ -297,7 +397,29 @@ public class StandaloneTest {
 							.ignite()
 							.shutdown();
 	}	
+	@Test
+	@DisplayName("On Autocloseable Ignitables must call close after shutdownException on shutdown Errors")
+	public <AutoCloseableIgnitable extends AutoCloseable & Ignitable> void autocloseableIgniteShutdownException(final @Mocked AutoCloseableIgnitable _ignitable) throws Exception {
 
+		Exception expectedException=new RuntimeException("ouch");
+		
+		new Expectations() {{
+			_ignitable.beforeStartup(); times=1;
+			_ignitable.startup(); times=1; 
+			_ignitable.afterStartup(); times=1;
+			_ignitable.beforeShutdown(); times=1;
+			_ignitable.shutdown(); times=1; result=expectedException;
+			_ignitable.afterShutdown(); times=0;
+			_ignitable.shutdownException(expectedException); times=1;
+			_ignitable.close(); times=1;
+		}};
+		
+		Standalone.builder()
+							.supplier(() -> _ignitable)
+						.build()
+							.ignite()
+							.shutdown();
+	}	
 
 	@Test
 	@DisplayName("When exception happens on afterShutdown then shutdownException must be called")
@@ -321,6 +443,29 @@ public class StandaloneTest {
 							.ignite()
 							.shutdown();
 	}
+	@Test
+	@DisplayName("On Autocloseable Ignitables must call close after shutdownException on afterShutdown Errors")
+	public <AutoCloseableIgnitable extends AutoCloseable & Ignitable> void autocloseableIgniteAfterShutdownException(final @Mocked AutoCloseableIgnitable _ignitable) throws Exception {
+
+		Exception expectedException=new RuntimeException("ouch");
+		
+		new Expectations() {{
+			_ignitable.beforeStartup(); times=1;
+			_ignitable.startup(); times=1; 
+			_ignitable.afterStartup(); times=1;
+			_ignitable.beforeShutdown(); times=1;
+			_ignitable.shutdown(); times=1;
+			_ignitable.afterShutdown(); times=1; result=expectedException;
+			_ignitable.shutdownException(expectedException); times=1;
+			_ignitable.close(); times=1;
+		}};
+		
+		Standalone.builder()
+							.supplier(() -> _ignitable)
+						.build()
+							.ignite()
+							.shutdown();
+	}	
 	
 	@SuppressWarnings("static-access")
 	static Stream<Arguments> bannerDatapack(){

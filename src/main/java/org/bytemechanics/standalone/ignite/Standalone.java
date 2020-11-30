@@ -35,6 +35,7 @@ import java.util.logging.Logger;
 import org.bytemechanics.standalone.ignite.exceptions.FontNotReadable;
 import org.bytemechanics.standalone.ignite.exceptions.MandatoryParameterNotProvided;
 import org.bytemechanics.standalone.ignite.exceptions.ParameterException;
+import org.bytemechanics.standalone.ignite.internal.commons.functional.LambdaUnchecker;
 import org.bytemechanics.standalone.ignite.internal.commons.string.Figlet;
 import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
 
@@ -201,12 +202,26 @@ public class Standalone{
 					.map(this::startupFunction)
 					.ifPresent(this::afterStartupFunction);
 		}catch(Exception e){
-			this.instance.startupException(e);
+			startupException(e);
 		}
 		
 		return reply;
 	}
 
+	private void closeAutoCloseables(){
+		Optional.ofNullable(this.instance)
+					.filter(ignitable -> AutoCloseable.class.isAssignableFrom(ignitable.getClass()))
+					.map(ignitable -> (AutoCloseable)ignitable)
+					.ifPresent(LambdaUnchecker.uncheckedConsumer(closeableIgnitable -> closeableIgnitable.close()));
+	}
+	private void startupException(final Exception e){
+		try{
+			this.instance.startupException(e);
+		}finally{
+			closeAutoCloseables();
+		}
+	}
+	
 	/**
 	 * Override this method to implement special tasks for graceful shutdown
 	 * If this instance implements Closeable, then the default implementation will call Closeable::close
@@ -224,6 +239,8 @@ public class Standalone{
 					.ifPresent(this::afterShutdownFunction);
 		}catch(Exception e){
 			this.instance.shutdownException(e);
+		}finally{
+			closeAutoCloseables();
 		}
 
 		return reply;
