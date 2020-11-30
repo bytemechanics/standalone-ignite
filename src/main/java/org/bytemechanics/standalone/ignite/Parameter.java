@@ -71,8 +71,7 @@ public interface Parameter {
 	
 	/**
 	 * Semantic validation after correct parameters parse is done when the validation method is executed all parameters has its values
-	 * @return function to validate semantically the parameter if valid returns null otherwise the error description
-	 * @since 1.1.0
+	 * @since 1.2.0
 	 */
 	public default void validate(final Object _value) throws Exception{
 	}
