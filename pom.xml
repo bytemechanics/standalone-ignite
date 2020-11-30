@@ -80,6 +80,31 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.felix</groupId>
+				<artifactId>maven-bundle-plugin</artifactId>
+				<configuration>
+					<instructions>
+						<Export-Package>
+							!org.bytemechanics.standalone.ignite.internal.*,
+							!org.bytemechanics.standalone.ignite.internal.commons.functional.*,
+							!org.bytemechanics.standalone.ignite.internal.commons.reflection.*,
+							!org.bytemechanics.standalone.ignite.internal.commons.string.*,
+							org.bytemechanics.standalone.ignite.*;version=${project.version};-noimport:=true,
+						</Export-Package>
+						<Bundle-DocURL>https://standalone-ignite.bytemechanics.org/javadoc/index.html</Bundle-DocURL>
+					</instructions>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<configuration>
+					<archive>
+						<manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+					</archive>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 </project>

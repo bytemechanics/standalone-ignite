@@ -1,7 +1,10 @@
 # Version 1.2.0 (2020/11/30)
 ---
 
-Move from Spock test framework to Junit5+JMockit
+## Changes
+* Move from Spock test framework to Junit5+JMockit
+* Add apache felix to point the public and private packages
 
-Enhancements
+## Features
 * #38 Add flag to disable banner
+*
