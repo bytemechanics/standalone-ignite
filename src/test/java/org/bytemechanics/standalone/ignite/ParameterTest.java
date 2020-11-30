@@ -69,18 +69,25 @@ public class ParameterTest {
 		//Verify
 		Assertions.assertEquals(true, StandaloneAppTestParameter.BOOLEANVALUE.getValue(boolean.class).isPresent());
 		Assertions.assertEquals(true, StandaloneAppTestParameter.BOOLEANVALUE.getValue(boolean.class).get().booleanValue());
+		Assertions.assertEquals(true, StandaloneAppTestParameter.BOOLEANVALUE.get(boolean.class).booleanValue());
 		Assertions.assertEquals(true, StandaloneAppTestParameter.INTVALUE.getValue(int.class).isPresent());
 		Assertions.assertEquals(2234, StandaloneAppTestParameter.INTVALUE.getValue(int.class).get().intValue());
+		Assertions.assertEquals(2234, StandaloneAppTestParameter.INTVALUE.get(int.class).intValue());
 		Assertions.assertEquals(true, StandaloneAppTestParameter.LONGVALUE.getValue(long.class).isPresent());
 		Assertions.assertEquals(3243321312l, StandaloneAppTestParameter.LONGVALUE.getValue(long.class).get().longValue());
+		Assertions.assertEquals(3243321312l, StandaloneAppTestParameter.LONGVALUE.get(long.class).longValue());
 		Assertions.assertEquals(true, StandaloneAppTestParameter.FLOATVALUE.getValue(float.class).isPresent());
 		Assertions.assertEquals(3123.32f, StandaloneAppTestParameter.FLOATVALUE.getValue(float.class).get().floatValue());
+		Assertions.assertEquals(3123.32f, StandaloneAppTestParameter.FLOATVALUE.get(float.class).floatValue());
 		Assertions.assertEquals(true, StandaloneAppTestParameter.DOUBLEVALUE.getValue(double.class).isPresent());
 		Assertions.assertEquals(3123.32d, StandaloneAppTestParameter.DOUBLEVALUE.getValue(double.class).get().doubleValue());
+		Assertions.assertEquals(3123.32d, StandaloneAppTestParameter.DOUBLEVALUE.get(double.class).doubleValue());
 		Assertions.assertEquals(true, StandaloneAppTestParameter.STRINGVALUE.getValue(String.class).isPresent());
 		Assertions.assertEquals("TEST", StandaloneAppTestParameter.STRINGVALUE.getValue(String.class).get());
+		Assertions.assertEquals("TEST", StandaloneAppTestParameter.STRINGVALUE.get(String.class));
 		Assertions.assertEquals(true, StandaloneAppTestParameter.ENUMVALUE.getValue(StandaloneAppTestParameter.class).isPresent());
 		Assertions.assertEquals(StandaloneAppTestParameter.ENUMVALUE, StandaloneAppTestParameter.ENUMVALUE.getValue(StandaloneAppTestParameter.class).get());
+		Assertions.assertEquals(StandaloneAppTestParameter.ENUMVALUE, StandaloneAppTestParameter.ENUMVALUE.get(StandaloneAppTestParameter.class));
 	}
 
 	@ParameterizedTest(name = "ParseParameters {0} for StandaloneAppTestParameter.class must fail with empty value")

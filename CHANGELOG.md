@@ -7,4 +7,4 @@
 
 ## Features
 * #38 Add flag to disable banner
-*
+* #36 Parameter should have a get method to get the value without Optional usage

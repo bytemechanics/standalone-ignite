@@ -100,6 +100,17 @@ public interface Parameter {
 					.map(value -> (T)value);
 	}
 	/**
+	 * Returns the current value casted to the given class
+	 * @param <T> type of the class to be cast
+	 * @param _class the class to be casted to
+	 * @return the value casted to the given class
+	 */
+	public default <T> T get (final Class<T> _class){
+		return getValue(_class)
+					.get();
+	}
+	
+	/**
 	 * Replace the current parameter value
 	 * @param _value the new value
 	 * @return new parameter with the new value assigned
