@@ -43,7 +43,7 @@
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>copy-commons</artifactId>
-			<version>1.5.1</version>
+			<version>1.5.2</version>
 			<classifier>tests</classifier>
 			<scope>test</scope>
 		</dependency>
@@ -64,7 +64,7 @@
 						<configuration>
 							<copies>
 								<copy>
-									<artifact>${project.groupId}:copy-commons:1.5.1</artifact>
+									<artifact>${project.groupId}:copy-commons:1.5.2</artifact>
 									<classes>
 										<class>org.bytemechanics.commons.string.Figlet</class>
 										<class>org.bytemechanics.commons.string.GenericTextParser</class>
