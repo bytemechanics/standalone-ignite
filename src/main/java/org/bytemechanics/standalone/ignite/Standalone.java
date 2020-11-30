@@ -35,6 +35,7 @@ import java.util.logging.Logger;
 import org.bytemechanics.standalone.ignite.exceptions.FontNotReadable;
 import org.bytemechanics.standalone.ignite.exceptions.MandatoryParameterNotProvided;
 import org.bytemechanics.standalone.ignite.exceptions.ParameterException;
+import org.bytemechanics.standalone.ignite.internal.commons.functional.LambdaUnchecker;
 import org.bytemechanics.standalone.ignite.internal.commons.string.Figlet;
 import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
 
@@ -50,6 +51,8 @@ public class Standalone{
 	
 	/** Standalone name. OPTIONAL*/
 	private final String name;
+	/** Banner. OPTIONAL (default active)*/
+	private final boolean showBanner;
 	/** Banner font. OPTIONAL*/
 	private final URL bannerFont;
 	/** supplier for standalone implementation. MANDATORY*/
@@ -59,22 +62,23 @@ public class Standalone{
 	/** Arguments from the command line execution. OPTIONAL */
 	private final String[] arguments;
 	/** console consumer by default java.util.logging. OPTIONAL*/
-	private final Consumer<String> console;
+	private final Console console;
 
 	/** Internal ignitable instance */
 	private Ignitable instance;
 
 	
-	protected Standalone(final Supplier<Ignitable> _supplier,final String _name,final List<Class<? extends Enum<? extends Parameter>>> _parameters,final String[] _arguments,final Consumer<String> _console,final URL _bannerFont){
+	protected Standalone(final Supplier<Ignitable> _supplier,final String _name,final boolean _showBanner,final List<Class<? extends Enum<? extends Parameter>>> _parameters,final String[] _arguments,final Consumer<String> _console,final URL _bannerFont,final boolean _verbose){
 		if(_supplier==null)
 			throw new NullPointerException("Mandatory \"supplier\" can not be null");
 		this.name=_name;
+		this.showBanner=_showBanner;
 		this.bannerFont=(_bannerFont!=null)? _bannerFont : ClassLoader.getSystemResource("standard.flf");
 		this.supplier=_supplier;
 		this.arguments=((_arguments==null)||_arguments.length==0)? new String[0] : _arguments;
 		this.parameters=_parameters;
 		this.instance=null;
-		this.console=(_console!=null)? _console : getDefaultConsole();
+		this.console=new Console((_console!=null)? _console : getDefaultConsole(),_verbose);
 	}
 	
 	
@@ -198,12 +202,26 @@ public class Standalone{
 					.map(this::startupFunction)
 					.ifPresent(this::afterStartupFunction);
 		}catch(Exception e){
-			this.instance.startupException(e);
+			startupException(e);
 		}
 		
 		return reply;
 	}
 
+	private void closeAutoCloseables(){
+		Optional.ofNullable(this.instance)
+					.filter(ignitable -> AutoCloseable.class.isAssignableFrom(ignitable.getClass()))
+					.map(ignitable -> (AutoCloseable)ignitable)
+					.ifPresent(LambdaUnchecker.uncheckedConsumer(closeableIgnitable -> closeableIgnitable.close()));
+	}
+	private void startupException(final Exception e){
+		try{
+			this.instance.startupException(e);
+		}finally{
+			closeAutoCloseables();
+		}
+	}
+	
 	/**
 	 * Override this method to implement special tasks for graceful shutdown
 	 * If this instance implements Closeable, then the default implementation will call Closeable::close
@@ -221,6 +239,8 @@ public class Standalone{
 					.ifPresent(this::afterShutdownFunction);
 		}catch(Exception e){
 			this.instance.shutdownException(e);
+		}finally{
+			closeAutoCloseables();
 		}
 
 		return reply;
@@ -283,18 +303,18 @@ public class Standalone{
 		
 		final Standalone reply=this;
 		
-		if(this.name!=null){
+		if((this.showBanner)&&(this.name!=null)){
 			try(InputStream font=this.bannerFont.openStream()){
 				Figlet figlet=new Figlet(font, Charset.forName("UTF-8"));
 				String banner=figlet.print(this.name);
-				this.console.accept(figlet.line(this.name,'='));
-				this.console.accept(banner);
-				this.console.accept(figlet.line(this.name,'-'));
-				this.console.accept(SimpleFormat.format("\tJVM: {}",System.getProperty("java.version")));
-				this.console.accept(SimpleFormat.format("\tCores: {}",Runtime.getRuntime().availableProcessors()));
-				this.console.accept(SimpleFormat.format("\tMemory (bytes): {}/{}",Runtime.getRuntime().totalMemory(),Runtime.getRuntime().maxMemory()));
-				this.console.accept(SimpleFormat.format("\tBase path: {}", new File(".").getCanonicalPath()));
-				this.console.accept(SimpleFormat.format("\tVersion: {}/{}",
+				this.console.info(figlet.line(this.name,'='));
+				this.console.info(banner);
+				this.console.info(figlet.line(this.name,'-'));
+				this.console.info(SimpleFormat.format("\tJVM: {}",System.getProperty("java.version")));
+				this.console.info(SimpleFormat.format("\tCores: {}",Runtime.getRuntime().availableProcessors()));
+				this.console.info(SimpleFormat.format("\tMemory (bytes): {}/{}",Runtime.getRuntime().totalMemory(),Runtime.getRuntime().maxMemory()));
+				this.console.info(SimpleFormat.format("\tBase path: {}", new File(".").getCanonicalPath()));
+				this.console.info(SimpleFormat.format("\tVersion: {}/{}",
 															Optional.of(this.instance)
 																		.map(Object::getClass)
 																		.map(Class::getPackage)
@@ -305,7 +325,7 @@ public class Standalone{
 																		.map(Class::getPackage)
 																		.map(Package::getImplementationVersion)
 																		.orElse("unknown")));
-				this.console.accept(figlet.line(this.name,'='));
+				this.console.info(figlet.line(this.name,'='));
 			} catch (IOException e) {
 				throw new FontNotReadable(this.bannerFont,e);
 			}
@@ -336,8 +356,8 @@ public class Standalone{
 							.printBanner()
 								.startup();
 		}catch(MandatoryParameterNotProvided e){
-			this.console.accept(e.getMessage());
-			this.console.accept(Parameter.getHelp(this.parameters));
+			this.console.error(e.getMessage());
+			this.console.error(Parameter.getHelp(this.parameters));
 		}
 		
 		return reply;
@@ -361,6 +381,14 @@ public class Standalone{
 	 */
 	protected String getName() {
 		return this.name;
+	}
+
+	/**
+	 * Standalone show banner flag. OPTIONAL (default true)
+	 * @return Standalone show banner flag
+	 */
+	public boolean isShowBanner() {
+		return showBanner;
 	}
 
 	/**
@@ -392,48 +420,101 @@ public class Standalone{
 		return this.instance;
 	}
 
+	/**
+	 * Return the configured console
+	 * @return the configured console
+	 */
+	public Console getConsole(){
+		return this.console;
+	}
 
+	/** Standalone builder helper class */
 	@java.lang.SuppressWarnings("all")
 	public static class StandaloneBuilder {
 
 		private final List<Class<? extends Enum<? extends Parameter>>> parameters;
 		private String name;
+		private boolean showBanner=true;
 		private URL bannerFont;
 		private Supplier<Ignitable> supplier;
 		private String[] arguments;
+		private boolean verbose=false;
 		private Consumer<String> console;
 
 		StandaloneBuilder(){
 			this.parameters=new ArrayList<>();
 		}
 		
+		/**
+		* Standalone name. If present banner is printed at console. OPTIONAL
+		* @return StandaloneBuilder to chain other properties
+		*/
 		public StandaloneBuilder name(final String _name) {
 			this.name = _name;
 			return this;
 		}
+		/**
+		* Show banner. flag to activate the banner, by default is active but is only shown if the standalone has assigned name
+		* @return StandaloneBuilder to chain other properties
+		* @see StandaloneBuilder#name(java.lang.String) 
+		*/
+		public StandaloneBuilder showBanner(final boolean _showBanner) {
+			this.showBanner = _showBanner;
+			return this;
+		}
+		/**
+		* Baner font. Figlet font file URL by defautl use embeded standard.flf font.
+		* @return StandaloneBuilder to chain other properties
+		*/
 		public StandaloneBuilder bannerFont(final URL _bannerFont) {
 			this.bannerFont = _bannerFont;
 			return this;
 		}
+		/**
+		* Ignitable supplier to provide the ignitable instance (MANDATORY)
+		* @return StandaloneBuilder to chain other properties
+		*/
 		public StandaloneBuilder supplier(final Supplier<Ignitable> _supplier) {
 			this.supplier = _supplier;
 			return this;
 		}
+		/**
+		* Parameters to load from the arguments. Can be invoked several times and will load every enum requested
+		* @return StandaloneBuilder to chain other properties
+		*/
 		public StandaloneBuilder parameters(final Class<? extends Enum<? extends Parameter>> _parameters) {
 			this.parameters.add(_parameters);
 			return this;
 		}
+		/**
+		* Arguments reveived to parse as parameters
+		* @return StandaloneBuilder to chain other properties
+		*/
 		public StandaloneBuilder arguments(final String[] _arguments) {
 			this.arguments = _arguments;
 			return this;
 		}
+
+		/**
+		* Verbose flag (default: false)
+		* @return StandaloneBuilder to chain other properties
+		*/
+		public StandaloneBuilder verbose(final boolean _verbose) {
+			this.verbose = _verbose;
+			return this;
+		}
+		
+		/**
+		* Console consumer where to write banner and standalone ignite default logs
+		* @return StandaloneBuilder to chain other properties
+		*/
 		public StandaloneBuilder console(final Consumer<String> _console) {
 			this.console = _console;
 			return this;
 		}
 
 		public Standalone build() {
-			Standalone.self=new Standalone(supplier,name,Collections.unmodifiableList(parameters), arguments,console,bannerFont);
+			Standalone.self=new Standalone(supplier,name,showBanner,Collections.unmodifiableList(parameters), arguments,console,bannerFont,verbose);
 			return Standalone.self;
 		}
 	}

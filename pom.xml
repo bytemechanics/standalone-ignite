@@ -4,10 +4,10 @@
 	<parent>
 		<groupId>org.bytemechanics</groupId>
 		<artifactId>bytemechanics-maven</artifactId>
-		<version>1.1.0</version>
+		<version>2.2.1</version>
 	</parent>
 	<artifactId>standalone-ignite</artifactId>
-	<version>1.1.3</version>
+	<version>1.2.0</version>
 	<packaging>jar</packaging>
 	<name>Standalone Ignite</name>
 	<description>Library to reduce the code necessary to start and make a controlled shutdown of standalone applications</description>
@@ -38,22 +38,33 @@
 		<connection>https://github.com/bytemechanics/standalone-ignite.git</connection>
 		<url>https://github.com/bytemechanics/standalone-ignite</url>
 	</scm>
+	
+	<dependencies>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>copy-commons</artifactId>
+			<version>1.5.2</version>
+			<classifier>tests</classifier>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
 
 	<build>
 		<plugins>
 			<plugin>
 				<groupId>org.bytemechanics.maven</groupId>
 				<artifactId>copysource-maven-plugin</artifactId>
-				<version>1.1.0</version>
+				<version>1.3.1</version>
 				<executions>
 					<execution>
+						<id>copy-main-classes</id>
 						<goals>
 							<goal>copy-classes</goal>
 						</goals>
 						<configuration>
 							<copies>
 								<copy>
-									<artifact>${project.groupId}:copy-commons:1.3.1</artifact>
+									<artifact>${project.groupId}:copy-commons:1.5.2</artifact>
 									<classes>
 										<class>org.bytemechanics.commons.string.Figlet</class>
 										<class>org.bytemechanics.commons.string.GenericTextParser</class>
@@ -68,6 +79,31 @@
 						</configuration>
 					</execution>
 				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.felix</groupId>
+				<artifactId>maven-bundle-plugin</artifactId>
+				<configuration>
+					<instructions>
+						<Export-Package>
+							!org.bytemechanics.standalone.ignite.internal.*,
+							!org.bytemechanics.standalone.ignite.internal.commons.functional.*,
+							!org.bytemechanics.standalone.ignite.internal.commons.reflection.*,
+							!org.bytemechanics.standalone.ignite.internal.commons.string.*,
+							org.bytemechanics.standalone.ignite.*;version=${project.version};-noimport:=true,
+						</Export-Package>
+						<Bundle-DocURL>https://standalone-ignite.bytemechanics.org/javadoc/index.html</Bundle-DocURL>
+					</instructions>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<configuration>
+					<archive>
+						<manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+					</archive>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>

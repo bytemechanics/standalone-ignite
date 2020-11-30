@@ -55,6 +55,7 @@ public class DefaultParameterContainer implements Parameter{
 	 * @param defaultValue default value
 	 * @param prefixes prefixes available to use for this parameter
 	 */
+	@SuppressWarnings("unchecked")
 	public DefaultParameterContainer(final String name,final Class<? extends Object> type,final String description,final Function<String,Object> parser,final Function<Object,String> validation,final boolean caseSensitive,final String defaultValue,final String... prefixes) {
 		if(name==null)
 			throw new NullPointerException("Mandatory \"name\" can not be null");
@@ -79,7 +80,7 @@ public class DefaultParameterContainer implements Parameter{
 								.orElse(Parameter.super.getPrefixes());
 	}
 	
-	
+	@SuppressWarnings("unchecked")
 	private <T> T buildCustomParser(final String _name,final Class<T> _type,final String _value,final boolean _isCaseSensitive) throws ParseException{
 		if(_type.isEnum()){
 			if(_isCaseSensitive){
@@ -177,6 +178,7 @@ public class DefaultParameterContainer implements Parameter{
 	 * @see Parameter#setValue(java.lang.Object) 
 	 */
 	@Override
+	@SuppressWarnings("unchecked")
 	public Parameter setValue(Object _value) {
 		this.value=Optional.ofNullable(_value)
 								.filter(newValue -> getType().isAssignableFrom(newValue.getClass()))
