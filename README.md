@@ -108,78 +108,70 @@ public enum StandaloneAppTestParameter implements Parameter{
 ```
 
 4. Into your main instantiate Standalone
+* Option 1: Using `org.bytemechanics.standalone.ignite.Ignitable` interface
 ```Java
 package mypackage;
 
 import java.util.Optional;
 import java.util.function.Function;
+import org.bytemechanics.standalone.ignite.Ignitable;
 import org.bytemechanics.standalone.ignite.beans.DefaultParameterContainer;
 
 
 public final class StandaloneApp implements Ignitable{
 
 	@Override
-	public void beforeStartup() {
-		System.out.println("before-startup");
-	}
-	@Override
 	public void startup() {
-		System.out.println("startup");
-	}
-	@Override
-	public void afterStartup() {
-		System.out.println("after-startup");
+		// start your application
 	}
 
-
-	@Override
-	public void beforeShutdown() {
-		System.out.println("before-shutdown");
-	}
 	@Override
 	public void shutdown() {
-		System.out.println("shutdown");
-	}
-	@Override
-	public void afterShutdown() {
-		System.out.println("after-shutdown");
+		// shutdown your application (optional)
 	}
 
 	(...)
 
 	public static final void main(final String... _args){
-		Standalone.builder()
+		Standalone.builder(StandaloneApp::new)
 					.arguments(_args)
-					.supplier(StandaloneApp::new)
 					(...)
 					.parameters(StandaloneAppTestParameter.class)
 					(...)
 				.build();
-		(...)
+					.ignite();
 	}
 }
 ```
-
-5. Into your main instantiate launch standalone calling ignite() method
+* Option 2: Using `org.bytemechanics.standalone.ignite.IgnitableAdapter` abstract class
 ```Java
 package mypackage;
 
 import java.util.Optional;
 import java.util.function.Function;
-import org.bytemechanics.standalone.ignite.beans.DefaultParameterContainer;
+import org.bytemechanics.standalone.ignite.IgnitableAdapter;
 
 
-public final class StandaloneApp implements Ignitable{
+public final class StandaloneApp extends IgnitableAdapter{
 
+	@Override
+	public void startup() {
+		// start your application
+	}
+
+	@Override
+	public void shutdown() {
+		// shutdown your application (optional)
+	}
 	(...)
 
 	public static final void main(final String... _args){
-		Standalone.builder()
+		Standalone.builder(StandaloneApp::new)
 					.arguments(_args)
-					.supplier(StandaloneApp::new)
+					(...)
 					.parameters(StandaloneAppTestParameter.class)
 					(...)
-				.build()
+				.build();
 					.ignite();
 	}
 }

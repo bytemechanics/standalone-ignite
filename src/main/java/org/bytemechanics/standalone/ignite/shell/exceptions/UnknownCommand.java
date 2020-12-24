@@ -13,22 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.bytemechanics.standalone.ignite.exceptions;
+package org.bytemechanics.standalone.ignite.shell.exceptions;
+
+import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
 
 /**
- * Exception caused by unexpected error during shutdown process
+ * Unknown command
  * @author afarre
+ * @since 2.0.0
  */
-public class ShutdownSystemFailure extends RuntimeException{
+public class UnknownCommand extends RuntimeException{
 	
-	protected static final String MESSAGE="Shutdown system failure";
+	protected static final String MESSAGE="Unknown command {} available commands are {}";
 	
 	/**
-	 * Shutdown system failure exception constructor
-	 * @param _cause cause for the exception
+	 * Unknown command exception constructor
+	 * @param _command command tried to execute
+	 * @param _availableCommands available commands
 	 */
-	public ShutdownSystemFailure(final Throwable _cause) {
-		super(MESSAGE,_cause);	
+	public UnknownCommand(final String _command,final String _availableCommands) {
+		super(SimpleFormat.format(MESSAGE, _command,_availableCommands));	
 	}
-
 }

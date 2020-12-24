@@ -13,25 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.bytemechanics.standalone.ignite.exceptions;
+package org.bytemechanics.standalone.ignite.shell.exceptions;
 
-import java.net.URL;
+import java.util.Optional;
 import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
 
 /**
- * Exception to report that provided font url is not valid
+ * Unknown console type exception. Raised when the received console is not a ShellConsole instance
  * @author afarre
+ * @since 2.0.0
+ * @see ShellConsole
  */
-public class FontNotReadable extends RuntimeException{
+public class UnknownConsoleType extends RuntimeException{
 	
-	protected static final String MESSAGE="Font {} not readable or not found";
+	protected static final String MESSAGE="Unknown console {} type. Expected ShellConsole instance";
 	
 	/**
-	 * Mandatory argument not provided exception constructor
-	 * @param _fontURL font url
-	 * @param _cause exception cause
+	 * Unknown console type exception constructor
+	 * @param _console received console instance
 	 */
-	public FontNotReadable(final URL _fontURL,final Throwable _cause) {
-		super(SimpleFormat.format(MESSAGE, _fontURL),_cause);	
+	public UnknownConsoleType(final Object _console) {
+		super(SimpleFormat.format(MESSAGE, Optional.ofNullable(_console)
+														.map(Object::getClass)
+													.orElse(null)));	
 	}
 }

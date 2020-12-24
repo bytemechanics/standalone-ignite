@@ -15,6 +15,7 @@
  */
 package org.bytemechanics.standalone.ignite.exceptions;
 
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.bytemechanics.standalone.ignite.Parameter;
@@ -28,15 +29,22 @@ import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
  */
 public class NullOrEmptyMandatoryParameter extends ParameterException{
 	
-	private static final String MESSAGE="Mandatory parameter {} is null or empty";
+	protected static final String MESSAGE="Mandatory parameter {} is null or empty";
 	
 	/**
 	 * Mandatory parameter not provided exception constructor
 	 * @param _parameter necessary parameter not provided
 	 */
 	public NullOrEmptyMandatoryParameter(final Parameter _parameter) {
-		super(_parameter,SimpleFormat.format(MESSAGE, _parameter.name(),Stream.of(_parameter.getPrefixes())
-																				.map(prefix -> String.valueOf(prefix)+":")
-																				.collect(Collectors.toList())));	
+		super(_parameter
+				,SimpleFormat.format(MESSAGE
+										,Optional.ofNullable(_parameter)
+														.map(Parameter::name)
+													.orElse(null)
+										,Stream.of(Optional.ofNullable(_parameter)
+																.map(Parameter::getPrefixes)
+															.orElse(new String[0]))
+													.map(prefix -> String.valueOf(prefix)+":")
+												.collect(Collectors.toList())));	
 	}
 }

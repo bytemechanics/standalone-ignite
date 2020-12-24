@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Byte Mechanics.
+ * Copyright 2020 Byte Mechanics.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,22 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.bytemechanics.standalone.ignite.exceptions;
+package org.bytemechanics.standalone.ignite.mocks;
+
+import org.bytemechanics.standalone.ignite.Ignitable;
 
 /**
- * Exception caused by unexpected error during shutdown process
- * @author afarre
+ *
+ * @author E103880
  */
-public class ShutdownSystemFailure extends RuntimeException{
-	
-	protected static final String MESSAGE="Shutdown system failure";
-	
-	/**
-	 * Shutdown system failure exception constructor
-	 * @param _cause cause for the exception
-	 */
-	public ShutdownSystemFailure(final Throwable _cause) {
-		super(MESSAGE,_cause);	
-	}
+public class MockedIgnitableRunnableAutocloseable implements Runnable,Ignitable,AutoCloseable {
 
+	@Override
+	public void run() {
+	}
+	@Override
+	public void close() throws Exception {
+	}
 }

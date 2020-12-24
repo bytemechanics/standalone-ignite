@@ -26,13 +26,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import org.bytemechanics.standalone.ignite.exceptions.FontNotReadable;
+import org.bytemechanics.standalone.ignite.exceptions.MandatoryIgnitableSupplier;
 import org.bytemechanics.standalone.ignite.exceptions.MandatoryParameterNotProvided;
 import org.bytemechanics.standalone.ignite.exceptions.ParameterException;
 import org.bytemechanics.standalone.ignite.internal.commons.functional.LambdaUnchecker;
@@ -45,12 +49,16 @@ import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
  */
 public class Standalone{
 
+	public static final Pattern PATTERN=Pattern.compile("(?<argument>([^ ]*\".*\")(?:[ ])|([^ ]*\".*\")(?:$)|([^ ]*)(?:[ ])|([^ ]*)(?:$))");
+	
 	/** Latest standalone instantiated */
 	protected static Standalone self=null; 
 	
 	
 	/** Standalone name. OPTIONAL*/
 	private final String name;
+	/** Standalone descriptipn. OPTIONAL*/
+	private final String description;
 	/** Banner. OPTIONAL (default active)*/
 	private final boolean showBanner;
 	/** Banner font. OPTIONAL*/
@@ -62,31 +70,66 @@ public class Standalone{
 	/** Arguments from the command line execution. OPTIONAL */
 	private final String[] arguments;
 	/** console consumer by default java.util.logging. OPTIONAL*/
-	private final Console console;
+	private final OutConsole console;
 
 	/** Internal ignitable instance */
 	private Ignitable instance;
 
-	
-	protected Standalone(final Supplier<Ignitable> _supplier,final String _name,final boolean _showBanner,final List<Class<? extends Enum<? extends Parameter>>> _parameters,final String[] _arguments,final Consumer<String> _console,final URL _bannerFont,final boolean _verbose){
+	/**
+	 * Standalone constructor
+	 * @param _supplier ignitable supplier
+	 * @param _name optional name for the banner
+	 * @param _description optional description for the help
+	 * @param _showBanner flag to determine if the name is informed should show the banner
+	 * @param _bannerFont banner font
+	 * @param _parameters List of parameters enum to parse
+	 * @param _arguments arguments to use
+	 * @param _console console to use
+	 * @param _consoleFormat console format
+	 * @param _verbose console verbose enabler
+	 */
+	protected Standalone(final Supplier<Ignitable> _supplier,final String _name,final String _description,final boolean _showBanner,final URL _bannerFont,final List<Class<? extends Enum<? extends Parameter>>> _parameters,final String[] _arguments,final Consumer<String> _console,final BiFunction<String,Object[],String> _consoleFormat,final boolean _verbose){
+		this(_supplier
+				, _name
+				, _description
+				, _showBanner
+				, _bannerFont
+				, _parameters
+				, _arguments
+				, new OutConsole((_console!=null)? _console : getDefaultConsole(),_consoleFormat,_verbose)
+				, _verbose);
+	}
+	/**
+	 * Standalone constructor
+	 * @param _supplier ignitable supplier
+	 * @param _name optional name for the banner
+	 * @param _description optional description for the help
+	 * @param _showBanner flag to determine if the name is informed should show the banner
+	 * @param _bannerFont banner font
+	 * @param _parameters List of parameters enum to parse
+	 * @param _arguments arguments to use
+	 * @param _console console to use
+	 * @param _verbose console verbose enabler
+	 */
+	protected Standalone(final Supplier<Ignitable> _supplier,final String _name,final String _description,final boolean _showBanner,final URL _bannerFont,final List<Class<? extends Enum<? extends Parameter>>> _parameters,final String[] _arguments,final Console _console,final boolean _verbose){
 		if(_supplier==null)
 			throw new NullPointerException("Mandatory \"supplier\" can not be null");
 		this.name=_name;
+		this.description=_description;
 		this.showBanner=_showBanner;
 		this.bannerFont=(_bannerFont!=null)? _bannerFont : ClassLoader.getSystemResource("standard.flf");
 		this.supplier=_supplier;
 		this.arguments=((_arguments==null)||_arguments.length==0)? new String[0] : _arguments;
 		this.parameters=_parameters;
 		this.instance=null;
-		this.console=new Console((_console!=null)? _console : getDefaultConsole(),_verbose);
+		this.console=new OutConsole(_console,_verbose);
 	}
-	
 	
 	/**
 	 * Initializes java logging to create a CONSOLE output without prefixes
 	 * @return The same instance provided
 	 */
-	private Consumer<String> getDefaultConsole(){
+	private static Consumer<String> getDefaultConsole(){
 		
 		final Logger logger=Logger.getLogger("CONSOLE");
 		
@@ -253,7 +296,7 @@ public class Standalone{
 	protected Standalone parseParameters(){
 		
 		final Standalone reply=this;
-		
+
 		try{
 			this.parameters.stream()
 							.filter(Objects::nonNull)
@@ -384,6 +427,15 @@ public class Standalone{
 	}
 
 	/**
+	 * Standalone description. Description to show into help. OPTIONAL
+	 * @return Standalone description. OPTIONAL
+	 * @since 2.0.0
+	*/
+	public String getDescription() {
+		return description;
+	}
+
+	/**
 	 * Standalone show banner flag. OPTIONAL (default true)
 	 * @return Standalone show banner flag
 	 */
@@ -432,21 +484,26 @@ public class Standalone{
 	@java.lang.SuppressWarnings("all")
 	public static class StandaloneBuilder {
 
-		private final List<Class<? extends Enum<? extends Parameter>>> parameters;
-		private String name;
-		private boolean showBanner=true;
-		private URL bannerFont;
-		private Supplier<Ignitable> supplier;
-		private String[] arguments;
-		private boolean verbose=false;
-		private Consumer<String> console;
+		protected final Supplier<Ignitable> supplier;
+		protected final List<Class<? extends Enum<? extends Parameter>>> parameters;
+		protected String name;
+		protected String description;
+		protected boolean showBanner=true;
+		protected URL bannerFont;
+		protected String[] arguments;
+		protected boolean verbose=false;
+		protected Consumer<String> console;
+		protected Console consoleInstance=null;
+		protected BiFunction<String,Object[],String> consoleFormat=((message,args) -> SimpleFormat.format(message,args));
 
-		StandaloneBuilder(){
+		StandaloneBuilder(final Supplier<Ignitable> _supplier){
+			this.supplier=_supplier;
 			this.parameters=new ArrayList<>();
 		}
 		
 		/**
 		* Standalone name. If present banner is printed at console. OPTIONAL
+		* @param _name name of the application to use as banner if no name shows no banner
 		* @return StandaloneBuilder to chain other properties
 		*/
 		public StandaloneBuilder name(final String _name) {
@@ -454,7 +511,18 @@ public class Standalone{
 			return this;
 		}
 		/**
+		* Standalone description for help purposes. OPTIONAL
+		* @param _name name of the application to use as banner if no name shows no banner
+		* @return StandaloneBuilder to chain other properties
+		* @since 2.0.0
+		*/
+		public StandaloneBuilder description(final String _description) {
+			this.description = _description;
+			return this;
+		}
+		/**
 		* Show banner. flag to activate the banner, by default is active but is only shown if the standalone has assigned name
+		* @param _showBanner flag to show banner (by default true)
 		* @return StandaloneBuilder to chain other properties
 		* @see StandaloneBuilder#name(java.lang.String) 
 		*/
@@ -464,6 +532,7 @@ public class Standalone{
 		}
 		/**
 		* Baner font. Figlet font file URL by defautl use embeded standard.flf font.
+		* @param _bannerFont font to write the banner
 		* @return StandaloneBuilder to chain other properties
 		*/
 		public StandaloneBuilder bannerFont(final URL _bannerFont) {
@@ -471,15 +540,8 @@ public class Standalone{
 			return this;
 		}
 		/**
-		* Ignitable supplier to provide the ignitable instance (MANDATORY)
-		* @return StandaloneBuilder to chain other properties
-		*/
-		public StandaloneBuilder supplier(final Supplier<Ignitable> _supplier) {
-			this.supplier = _supplier;
-			return this;
-		}
-		/**
 		* Parameters to load from the arguments. Can be invoked several times and will load every enum requested
+		* @param _parameters parameters parser
 		* @return StandaloneBuilder to chain other properties
 		*/
 		public StandaloneBuilder parameters(final Class<? extends Enum<? extends Parameter>> _parameters) {
@@ -488,15 +550,32 @@ public class Standalone{
 		}
 		/**
 		* Arguments reveived to parse as parameters
+		* @param _arguments arguments passed to standalone
 		* @return StandaloneBuilder to chain other properties
 		*/
 		public StandaloneBuilder arguments(final String[] _arguments) {
-			this.arguments = _arguments;
+
+			this.arguments=Stream.of(_arguments)
+									.reduce((left,right) -> String.join(" ",left,right))
+										.map(PATTERN::matcher)
+										.map(matcher -> {
+												List<String> reply=new ArrayList<>();
+
+												while(matcher.find()){
+													reply.add(matcher.group("argument")
+																		.trim());
+												}
+
+												return reply;
+											})
+										.map(args -> args.toArray(new String[0]))
+										.orElseGet(() -> new String[0]);
 			return this;
 		}
 
 		/**
 		* Verbose flag (default: false)
+		* @param _verbose enable verbose output
 		* @return StandaloneBuilder to chain other properties
 		*/
 		public StandaloneBuilder verbose(final boolean _verbose) {
@@ -506,6 +585,7 @@ public class Standalone{
 		
 		/**
 		* Console consumer where to write banner and standalone ignite default logs
+		* @param _console console output channel
 		* @return StandaloneBuilder to chain other properties
 		*/
 		public StandaloneBuilder console(final Consumer<String> _console) {
@@ -513,18 +593,48 @@ public class Standalone{
 			return this;
 		}
 
+		/**
+		* Console consumer where to write banner and standalone ignite default logs
+		* @param _console console output channel
+		* @return StandaloneBuilder to chain other properties
+		* @see Console
+		* @since 2.0.0
+		*/
+		public StandaloneBuilder console(final Console _console) {
+			this.consoleInstance = _console;
+			return this;
+		}
+
+		/**
+		* Console consumer where to write banner and standalone ignite default logs
+		* @param _consoleFormat function to format output (by default usign {} as placeholder)
+		* @return StandaloneBuilder to chain other properties
+		* @since 2.0.0
+		*/
+		public StandaloneBuilder consoleformat(final BiFunction<String,Object[],String> _consoleFormat) {
+			this.consoleFormat = _consoleFormat;
+			return this;
+		}
+
 		public Standalone build() {
-			Standalone.self=new Standalone(supplier,name,showBanner,Collections.unmodifiableList(parameters), arguments,console,bannerFont,verbose);
+			if(this.consoleInstance!=null){
+				Standalone.self=new Standalone(supplier,name,description,showBanner,bannerFont,Collections.unmodifiableList(parameters), arguments,consoleInstance,verbose);
+			}else{
+				Standalone.self=new Standalone(supplier,name,description,showBanner,bannerFont,Collections.unmodifiableList(parameters), arguments,console,consoleFormat,verbose);
+			}
 			return Standalone.self;
 		}
 	}
 
 	/**
 	 * Returns Standalone instance builder
+	 * @param _supplier ignitable supplier to provide the ignitable instance (MANDATORY)
 	 * @return standalone builder
 	 */
-	public static StandaloneBuilder builder() {
-		return new StandaloneBuilder();
+	public static StandaloneBuilder builder(final Supplier<Ignitable> _supplier) {
+		return Optional.ofNullable(_supplier)
+							.map(StandaloneBuilder::new )
+						.orElseThrow(MandatoryIgnitableSupplier::new);
 	}
 	
 	/**
@@ -558,6 +668,11 @@ public class Standalone{
 		return Optional.of(getParametersClasses())
 						.filter(parameters -> !parameters.isEmpty())
 						.map(Parameter::getHelp)
+						.map(params -> String.join("",Optional.ofNullable(Standalone.self)
+																.map(Standalone::getDescription)
+																.map(desc -> desc+"\n")
+																.orElse("")
+														,params))
 						.orElse("");
 	}
 }

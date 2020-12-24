@@ -16,19 +16,18 @@
 package org.bytemechanics.standalone.ignite.exceptions;
 
 /**
- * Exception caused by unexpected error during shutdown process
+ * Exception to report thats necessary to provide an Ignitable supplier in order to create an Standalone instance
  * @author afarre
+ * @since 2.0.0
  */
-public class ShutdownSystemFailure extends RuntimeException{
+public class MandatoryIgnitableSupplier extends RuntimeException{
 	
-	protected static final String MESSAGE="Shutdown system failure";
+	protected static final String MESSAGE="A Ignitable supplier must be provided in order to create an Standalone instance";
 	
 	/**
-	 * Shutdown system failure exception constructor
-	 * @param _cause cause for the exception
+	 * Mandatory ignitable supplier exception constructor
 	 */
-	public ShutdownSystemFailure(final Throwable _cause) {
-		super(MESSAGE,_cause);	
+	public MandatoryIgnitableSupplier() {
+		super(MESSAGE);	
 	}
-
 }

@@ -24,7 +24,7 @@ import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
  */
 public class NecessaryMethodNotImplemented extends RuntimeException{
 	
-	private static final String MESSAGE="Necessary method {} not implemeted";
+	protected static final String MESSAGE="Necessary method {} not implemeted";
 	
 	/**
 	 * Necessary method not implemented exception constructor

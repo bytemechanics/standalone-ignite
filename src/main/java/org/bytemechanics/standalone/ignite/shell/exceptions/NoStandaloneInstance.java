@@ -13,22 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.bytemechanics.standalone.ignite.exceptions;
+package org.bytemechanics.standalone.ignite.shell.exceptions;
 
 /**
- * Exception caused by unexpected error during shutdown process
+ * No standalone instance exception
  * @author afarre
+ * @since 2.0.0
  */
-public class ShutdownSystemFailure extends RuntimeException{
+public class NoStandaloneInstance extends RuntimeException{
 	
-	protected static final String MESSAGE="Shutdown system failure";
+	protected static final String MESSAGE="Standalone instance not found, please assign standalone instance at ignitable";
 	
 	/**
-	 * Shutdown system failure exception constructor
-	 * @param _cause cause for the exception
+	 * No standalone instance constructor
 	 */
-	public ShutdownSystemFailure(final Throwable _cause) {
-		super(MESSAGE,_cause);	
+	public NoStandaloneInstance() {
+		super(MESSAGE);	
 	}
-
 }
