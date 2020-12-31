@@ -29,6 +29,7 @@ import org.bytemechanics.standalone.ignite.IgnitableAdapter;
 import org.bytemechanics.standalone.ignite.OutConsole;
 import org.bytemechanics.standalone.ignite.Standalone;
 import org.bytemechanics.standalone.ignite.internal.commons.functional.Tuple;
+import org.bytemechanics.standalone.ignite.shell.beans.CommandExecution;
 import org.bytemechanics.standalone.ignite.shell.exceptions.NoStandaloneInstance;
 import org.bytemechanics.standalone.ignite.shell.exceptions.UnknownCommand;
 import org.bytemechanics.standalone.ignite.shell.exceptions.UnknownConsoleType;
@@ -110,14 +111,14 @@ public abstract class ShellAdapter extends IgnitableAdapter {
 										.filter(commandLines -> !commandLines.isEmpty())
 										.collect(Collectors.toList());
 	}
-	protected Optional<Tuple<String,String[]>> buildCommand(final String _command){
+	protected Optional<CommandExecution> buildCommand(final String _command){
 		
 		return Optional.ofNullable(_command)
 						.map(String::trim)
 						.map(phrase -> phrase.split(" "))
 						.filter(words -> words.length>0)
 						.filter(words -> !words[0].trim().isEmpty())
-						.map(words -> Tuple.of(words[0],Arrays.stream(words, 1, words.length)
+						.map(words -> CommandExecution.from(words[0],Arrays.stream(words, 1, words.length)
 																.map(String::trim)
 																.filter(commArg -> !commArg.isEmpty())
 																	.collect(Collectors.toList())
@@ -127,11 +128,11 @@ public abstract class ShellAdapter extends IgnitableAdapter {
 		
 		buildCommand(_commands)
 				.ifPresent(command -> {
-					Optional.of(command.left())
+					Optional.of(command.getName())
 								.map(String::toLowerCase)
 								.map(_availableCommands::get)
-								.orElseThrow(() -> new UnknownCommand(command.left(), getCommandList()))
-									.accept(command.right(), getShell());
+								.orElseThrow(() -> new UnknownCommand(command.getName(), getCommandList()))
+									.accept(command.getArguments(), getShell());
 				});
 	}
 	

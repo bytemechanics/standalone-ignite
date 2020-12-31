@@ -39,6 +39,7 @@ import org.bytemechanics.standalone.ignite.Standalone;
 import org.bytemechanics.standalone.ignite.internal.commons.functional.LambdaUnchecker;
 import org.bytemechanics.standalone.ignite.internal.commons.functional.Tuple;
 import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
+import org.bytemechanics.standalone.ignite.shell.beans.CommandExecution;
 import org.bytemechanics.standalone.ignite.shell.exceptions.NoStandaloneInstance;
 import org.bytemechanics.standalone.ignite.shell.exceptions.UnknownCommand;
 import org.bytemechanics.standalone.ignite.shell.exceptions.UnknownConsoleType;
@@ -197,21 +198,21 @@ public class ShellAdapterTest {
 	@SuppressWarnings("static-access")
 	static Stream<Arguments> commandBuilderDatapack(){
 		return Stream.of(Arguments.of("",Optional.empty())
-							,Arguments.of("command1",Optional.of(Tuple.of("command1",new String[0])))
-							,Arguments.of("command2 2 \"dvbb   sdsfd\"",Optional.of(Tuple.of("command2",new String[]{"2","\"dvbb","sdsfd\""})))
-							,Arguments.of("command3 2 'dvbb  sdsfd'",Optional.of(Tuple.of("command3",new String[]{"2","'dvbb","sdsfd'"})))
-							,Arguments.of("command4 2 \"dvbb  sdsfd\"",Optional.of(Tuple.of("command4",new String[]{"2","\"dvbb","sdsfd\""})))
+							,Arguments.of("command1",Optional.of(CommandExecution.from("command1",new String[0])))
+							,Arguments.of("command2 2 \"dvbb   sdsfd\"",Optional.of(CommandExecution.from("command2",new String[]{"2","\"dvbb","sdsfd\""})))
+							,Arguments.of("command3 2 'dvbb  sdsfd'",Optional.of(CommandExecution.from("command3",new String[]{"2","'dvbb","sdsfd'"})))
+							,Arguments.of("command4 2 \"dvbb  sdsfd\"",Optional.of(CommandExecution.from("command4",new String[]{"2","\"dvbb","sdsfd\""})))
 						);
 	}	
 	@ParameterizedTest(name="When build a command from {0} the result should be {1}")
 	@MethodSource("commandBuilderDatapack")
-	public void buildCommand(final String _commamd,final Optional<Tuple<String,String[]>> _expected,@Tested ShellAdapter _adapter) {
+	public void buildCommand(final String _commamd,final Optional<CommandExecution> _expected,@Tested ShellAdapter _adapter) {
 		
-		final Optional<Tuple<String,String[]>> actual=_adapter.buildCommand(_commamd);
+		final Optional<CommandExecution> actual=_adapter.buildCommand(_commamd);
 		Assertions.assertEquals(_expected.isPresent(),actual.isPresent());
 		if(actual.isPresent()){
-			Assertions.assertEquals(_expected.get().left(),actual.get().left());
-			Assertions.assertArrayEquals(_expected.get().right(),actual.get().right());
+			Assertions.assertEquals(_expected.get().getName(),actual.get().getName());
+			Assertions.assertArrayEquals(_expected.get().getArguments(),actual.get().getArguments());
 		}
 	}
 

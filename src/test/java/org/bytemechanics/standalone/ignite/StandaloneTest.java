@@ -497,7 +497,7 @@ public class StandaloneTest {
 			expectedLines.add(figlet.line(_name,(char)'-'));
 			expectedLines.add(SimpleFormat.format("\tJVM: {}",System.getProperty("java.version")));
 			expectedLines.add(SimpleFormat.format("\tCores: {}",Runtime.getRuntime().availableProcessors()));
-			expectedLines.add(SimpleFormat.format("\tMemory \\(bytes\\): \\d*/1883242496",Runtime.getRuntime().maxMemory()));
+			expectedLines.add("\tMemory \\(bytes\\): \\d*/\\d*");
 			expectedLines.add(SimpleFormat.format("\tBase path: {}",new File(".").getCanonicalPath()));
 			expectedLines.add("\tVersion: unknown/unknown");
 			expectedLines.add(figlet.line(_name,(char)'='));
