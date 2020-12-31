@@ -15,6 +15,7 @@
  */
 package org.bytemechanics.standalone.ignite.exceptions;
 
+import java.util.Optional;
 import org.bytemechanics.standalone.ignite.Parameter;
 import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
 
@@ -25,7 +26,7 @@ import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
  */
 public class InvalidParameter extends ParameterException{
 	
-	private static final String MESSAGE="Invalid parameter {} with value {}: {}";
+	protected static final String MESSAGE="Invalid parameter {} with value {}: {}";
 	
 	/**
 	 * Invalid parameter
@@ -34,6 +35,12 @@ public class InvalidParameter extends ParameterException{
 	 * @param _reason failure cause
 	 */
 	public InvalidParameter(final Parameter _parameter,final Object _value,final String _reason) {
-		super(_parameter,SimpleFormat.format(MESSAGE, _parameter.name(),_value,_reason));	
+		super(_parameter
+				,SimpleFormat.format(MESSAGE
+										,Optional.ofNullable(_parameter)
+														.map(Parameter::name)
+													.orElse(null)
+										,_value
+										,_reason));	
 	}
 }

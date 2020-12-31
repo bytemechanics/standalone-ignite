@@ -15,35 +15,77 @@
  */
 package org.bytemechanics.standalone.ignite;
 
+import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 /**
- * @author afarre
+ * Console abstraction
+ * @author E103880
  */
-public class Console {
+public interface Console {
 
-	protected final Consumer<String> verbose;
-	protected final Consumer<String> info;
-	protected final Consumer<String> error;
+	/**
+	 * Recover console formatter
+	 * @return BiFuntion console formatter that converts a string and object array to a formated message
+	 */
+	public BiFunction<String, Object[], String> getFormatter();
 	
+	/**
+	 * Return if the verbose flag is enabled 
+	 * @return true if verbose is enabled
+	 */
+	public boolean isVerboseEnabled();
 	
-	public Console(final Consumer<String> _console,final boolean _verbose){
-		this((_verbose)? _console : (message -> {}),_console,_console);
-	}
-	public Console(final Consumer<String> _verbose,final Consumer<String> _info,final Consumer<String> _error){
-		this.verbose=_verbose;
-		this.info=_info;
-		this.error=_error;
-	}
+	/**
+	 * Returns a consumer that prints the error message to console
+	 * @return error message consumer
+	 */
+	public Consumer<String> getErrorPrinter();
+
+	/**
+	 * Returns a consumer that prints the info message to console
+	 * @return info message consumer
+	 */
+	public Consumer<String> getInfoPrinter();
+
+	/**
+	 * Returns a consumer that prints the verbose message to console
+	 * @return verbose message consumer
+	 */
+	public Consumer<String> getVerbosePrinter();
 	
-	
-	public void verbose(final String _message){
-		this.verbose.accept(_message);
+	/**
+	 * Print error message
+	 * @param _message message to print
+	 * @param _args message arguments
+	 */
+	public default void error(final String _message, final Object... _args){
+		Optional.ofNullable(_message)
+				.map(message -> getFormatter().apply(message, _args))
+				.ifPresent(message -> getErrorPrinter().accept(message));
 	}
-	public void info(final String _message){
-		this.info.accept(_message);
+
+	/**
+	 * Print info message
+	 * @param _message message to print
+	 * @param _args message arguments
+	 */
+	public default void info(final String _message, final Object... _args){
+		Optional.ofNullable(_message)
+				.map(message -> getFormatter().apply(message, _args))
+				.ifPresent(message -> getInfoPrinter().accept(message));
 	}
-	public void error(final String _message){
-		this.error.accept(_message);
+
+	/**
+	 * Print verbose message
+	 * @param _message message to print
+	 * @param _args message arguments
+	 */
+	public default void verbose(final String _message, final Object... _args){
+		Optional.ofNullable(_message)
+				.filter(message -> isVerboseEnabled())
+				.map(message -> getFormatter().apply(message, _args))
+				.ifPresent(message -> getVerbosePrinter().accept(message));
 	}
 }

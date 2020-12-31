@@ -16,7 +16,6 @@
 package org.bytemechanics.standalone.ignite;
 
 import java.io.File;
-import org.bytemechanics.standalone.ignite.mocks.StandaloneAppTestParameter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
@@ -24,6 +23,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -37,12 +37,15 @@ import mockit.Delegate;
 import mockit.Expectations;
 import mockit.Mocked;
 import org.bytemechanics.standalone.ignite.exceptions.InvalidParameter;
+import org.bytemechanics.standalone.ignite.exceptions.MandatoryIgnitableSupplier;
 import org.bytemechanics.standalone.ignite.exceptions.MandatoryParameterNotProvided;
 import org.bytemechanics.standalone.ignite.exceptions.ParameterException;
 import org.bytemechanics.standalone.ignite.internal.commons.functional.LambdaUnchecker;
 import org.bytemechanics.standalone.ignite.internal.commons.string.Figlet;
 import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
+import org.bytemechanics.standalone.ignite.mocks.StandaloneAppTestParameter;
 import org.bytemechanics.standalone.ignite.mocks.StandaloneAppTestParameter2;
+import org.bytemechanics.standalone.ignite.mocks.StandaloneAppTestParameter3;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -81,9 +84,8 @@ public class StandaloneTest {
 	@SuppressWarnings("ThrowableResultIgnored")
 	public void supplierNotProvided() {
 
-		Assertions.assertThrows(NullPointerException.class
-										,() -> Standalone.builder().build().ignite()
-										,"Mandatory \"supplier\" can not be null");
+		Assertions.assertThrows(MandatoryIgnitableSupplier.class
+										,() -> Standalone.builder(null).build().ignite());
 	}
 	
 	@Test
@@ -99,11 +101,10 @@ public class StandaloneTest {
 			_ignitable.afterShutdown(); times=1;
 		}};
 		
-		Standalone.builder()
-							.supplier(() -> _ignitable)
-						.build()
-							.ignite()
-							.shutdown();
+		Standalone.builder(() -> _ignitable)
+					.build()
+						.ignite()
+						.shutdown();
 	}	
 
 	@Test
@@ -120,20 +121,18 @@ public class StandaloneTest {
 			_ignitable.close(); times=1;
 		}};
 		
-		Standalone.builder()
-							.supplier(() -> _ignitable)
-						.build()
-							.ignite()
-							.shutdown();
+		Standalone.builder(() -> _ignitable)
+					.build()
+						.ignite()
+						.shutdown();
 	}	
 
 	@Test
 	@DisplayName("ParseParameters must do nothing if no parameters defined")
 	public void igniteNoParameters(final @Mocked Ignitable _ignitable) {
 
-		Standalone standalonePreParameters=Standalone.builder()
-																	.supplier(() -> _ignitable)
-																							.build();
+		Standalone standalonePreParameters=Standalone.builder(() -> _ignitable)
+														.build();
 		Standalone standalonePostParameters=standalonePreParameters.parseParameters();
 		Assertions.assertEquals(standalonePreParameters,standalonePostParameters);
 	}
@@ -147,8 +146,7 @@ public class StandaloneTest {
 		final String[] arguments=_args.split(",");
 		
 		//Execute
-		Standalone.builder()
-							.supplier(() -> _ignitable)
+		Standalone.builder(() -> _ignitable)
 							.parameters(StandaloneAppTestParameter.class)
 							.parameters(StandaloneAppTestParameter2.class)
 							.arguments(arguments)
@@ -186,7 +184,26 @@ public class StandaloneTest {
 		Assertions.assertEquals(true, StandaloneAppTestParameter2.ADDITIONALENUMVALUE.getValue(StandaloneAppTestParameter.class).isPresent());
 		Assertions.assertEquals(StandaloneAppTestParameter2.ADDITIONALENUMVALUE, StandaloneAppTestParameter2.ADDITIONALENUMVALUE.getValue(StandaloneAppTestParameter2.class).get());
 	}
-
+	
+	@ParameterizedTest(name = "ParseParameters {0} for StandaloneAppTestParameter.class must parse correctly parameters with spaces")
+	@ValueSource(strings = {"-stringvalue:\"this is my parameter with spaces\",other,again","other,again,-stringvalue:\"this is my parameter with spaces\""})
+	@SuppressWarnings("UnnecessaryUnboxing")
+	public void parseParametersWithSpaces(final String _args,final @Mocked Ignitable _ignitable){
+		
+		//Prepare
+		final String[] arguments=_args.split(",");
+		
+		//Execute
+		Standalone.builder(() -> _ignitable)
+							.parameters(StandaloneAppTestParameter3.class)
+							.arguments(arguments)
+						.build()
+							.ignite();
+		
+		//Verify
+		Assertions.assertEquals("\"this is my parameter with spaces\"", StandaloneAppTestParameter3.STRINGVALUE.get(String.class));
+	}
+	
 	@ParameterizedTest(name = "ParseParameters {0} for StandaloneAppTestParameter.class must parse correctly the correct values")
 	@ValueSource(strings = {"-booleanvalue:true,-intvalue:2234,-longvalue:3243321312,-floatvalue:3123.32,-doublevalue:3123.32,-stringvalue:semanticFailure,-enumvalue:ENUMVALUE"})
 	@SuppressWarnings({"ThrowableResultIgnored","unchecked"})
@@ -205,11 +222,10 @@ public class StandaloneTest {
 		}};
 		
 		//Execute
-		Standalone standalone=Standalone.builder()
-														.supplier(() -> _ignitable)
-														.parameters(StandaloneAppTestParameter.class)
-														.arguments(arguments)
-													.build();
+		Standalone standalone=Standalone.builder(() -> _ignitable)
+											.parameters(StandaloneAppTestParameter.class)
+											.arguments(arguments)
+										.build();
 			
 		Assertions.assertThrows(InvalidParameter.class
 										,() -> standalone.ignite()
@@ -229,10 +245,9 @@ public class StandaloneTest {
 			_ignitable.startupException(expectedException); times=1;
 		}};
 		
-		Standalone.builder()
-							.supplier(() -> _ignitable)
-						.build()
-							.ignite();
+		Standalone.builder(() -> _ignitable)
+					.build()
+						.ignite();
 	}
 	@Test
 	@DisplayName("On Autocloseable Ignitables must call close after startupException on beforeStartup Errors")
@@ -248,10 +263,9 @@ public class StandaloneTest {
 			_ignitable.close(); times=1;
 		}};
 		
-		Standalone.builder()
-							.supplier(() -> _ignitable)
-						.build()
-							.ignite();
+		Standalone.builder(() -> _ignitable)
+					.build()
+						.ignite();
 	}	
 	@Test
 	@DisplayName("When exception happens on startup then startupException must be called")
@@ -266,10 +280,9 @@ public class StandaloneTest {
 			_ignitable.startupException(expectedException); times=1;
 		}};
 		
-		Standalone.builder()
-							.supplier(() -> _ignitable)
-						.build()
-							.ignite();
+		Standalone.builder(() -> _ignitable)
+					.build()
+						.ignite();
 	}
 	@Test
 	@DisplayName("On Autocloseable Ignitables must call close after startupException on startup Errors")
@@ -285,10 +298,9 @@ public class StandaloneTest {
 			_ignitable.close(); times=1;
 		}};
 		
-		Standalone.builder()
-							.supplier(() -> _ignitable)
-						.build()
-							.ignite();
+		Standalone.builder(() -> _ignitable)
+					.build()
+						.ignite();
 	}	
 
 	@Test
@@ -304,10 +316,9 @@ public class StandaloneTest {
 			_ignitable.startupException(expectedException); times=1;
 		}};
 		
-		Standalone.builder()
-							.supplier(() -> _ignitable)
-						.build()
-							.ignite();
+		Standalone.builder(() -> _ignitable)
+					.build()
+						.ignite();
 	}
 	@Test
 	@DisplayName("On Autocloseable Ignitables must call close after startupException on afterStartup Errors")
@@ -323,10 +334,9 @@ public class StandaloneTest {
 			_ignitable.close(); times=1;
 		}};
 		
-		Standalone.builder()
-							.supplier(() -> _ignitable)
-						.build()
-							.ignite();
+		Standalone.builder(() -> _ignitable)
+					.build()
+						.ignite();
 	}	
 	
 	@Test
@@ -345,11 +355,10 @@ public class StandaloneTest {
 			_ignitable.shutdownException(expectedException); times=1;
 		}};
 		
-		Standalone.builder()
-							.supplier(() -> _ignitable)
-						.build()
-							.ignite()
-							.shutdown();
+		Standalone.builder(() -> _ignitable)
+					.build()
+						.ignite()
+						.shutdown();
 	}	
 	@Test
 	@DisplayName("On Autocloseable Ignitables must call close after shutdownException on beforeShutdown Errors")
@@ -368,11 +377,10 @@ public class StandaloneTest {
 			_ignitable.close(); times=1;
 		}};
 		
-		Standalone.builder()
-							.supplier(() -> _ignitable)
-						.build()
-							.ignite()
-							.shutdown();
+		Standalone.builder(() -> _ignitable)
+					.build()
+						.ignite()
+						.shutdown();
 	}	
 
 	@Test
@@ -391,11 +399,10 @@ public class StandaloneTest {
 			_ignitable.shutdownException(expectedException); times=1;
 		}};
 		
-		Standalone.builder()
-							.supplier(() -> _ignitable)
-						.build()
-							.ignite()
-							.shutdown();
+		Standalone.builder(() -> _ignitable)
+					.build()
+						.ignite()
+						.shutdown();
 	}	
 	@Test
 	@DisplayName("On Autocloseable Ignitables must call close after shutdownException on shutdown Errors")
@@ -414,11 +421,10 @@ public class StandaloneTest {
 			_ignitable.close(); times=1;
 		}};
 		
-		Standalone.builder()
-							.supplier(() -> _ignitable)
-						.build()
-							.ignite()
-							.shutdown();
+		Standalone.builder(() -> _ignitable)
+					.build()
+						.ignite()
+						.shutdown();
 	}	
 
 	@Test
@@ -437,11 +443,10 @@ public class StandaloneTest {
 			_ignitable.shutdownException(expectedException); times=1;
 		}};
 		
-		Standalone.builder()
-							.supplier(() -> _ignitable)
-						.build()
-							.ignite()
-							.shutdown();
+		Standalone.builder(() -> _ignitable)
+					.build()
+						.ignite()
+						.shutdown();
 	}
 	@Test
 	@DisplayName("On Autocloseable Ignitables must call close after shutdownException on afterShutdown Errors")
@@ -460,11 +465,10 @@ public class StandaloneTest {
 			_ignitable.close(); times=1;
 		}};
 		
-		Standalone.builder()
-							.supplier(() -> _ignitable)
-						.build()
-							.ignite()
-							.shutdown();
+		Standalone.builder(() -> _ignitable)
+					.build()
+						.ignite()
+						.shutdown();
 	}	
 	
 	@SuppressWarnings("static-access")
@@ -482,42 +486,35 @@ public class StandaloneTest {
 	@MethodSource("bannerDatapack")
 	@SuppressWarnings({"UnnecessaryUnboxing","static-access","unchecked"})
 	public void banner(final String _name,final String _font,final URL _fontURL,final @Mocked Ignitable _ignitable) throws IOException{
-			Queue console=new LinkedList();
 
-			new Expectations(){{
-				_ignitable.getClass(); 
-			}};
-			String javaVersion=SimpleFormat.format("\tJVM: {}",System.getProperty("java.version"));
-			String basePath=SimpleFormat.format("\tBase path: {}",new File(".").getCanonicalPath());
-			String cores=SimpleFormat.format("\tCores: {}",Runtime.getRuntime().availableProcessors());
-			String memory=SimpleFormat.format("\tMemory (bytes): {}/{}",Runtime.getRuntime().totalMemory(),Runtime.getRuntime().maxMemory());
-			String version="\tVersion: unknown/unknown";
-	
-			URL effectiveFontURL=(_fontURL==null)? Standalone.class.getClassLoader().getSystemResource("standard.flf") : _fontURL;
-			String banner=	(new Figlet(effectiveFontURL.openStream(),Charset.forName("UTF-8")))
-										.print(_name);
-			String line=(new Figlet(effectiveFontURL.openStream(),Charset.forName("UTF-8")))
-										.line(_name,(char)'=');
-			String linesimple=(new Figlet(effectiveFontURL.openStream(),Charset.forName("UTF-8")))
-										.line(_name,(char)'-');
+		Queue console=new LinkedList();
+		List<String> expectedLines=new ArrayList<>();
+		URL effectiveFontURL=(_fontURL==null)? Standalone.class.getClassLoader().getSystemResource("standard.flf") : _fontURL;
+		try(InputStream effectiveFontURLStream=effectiveFontURL.openStream()){
+			final Figlet figlet=new Figlet(effectiveFontURLStream,Charset.forName("UTF-8"));
+			expectedLines.add(figlet.line(_name,(char)'='));
+			expectedLines.add(figlet.print(_name));
+			expectedLines.add(figlet.line(_name,(char)'-'));
+			expectedLines.add(SimpleFormat.format("\tJVM: {}",System.getProperty("java.version")));
+			expectedLines.add(SimpleFormat.format("\tCores: {}",Runtime.getRuntime().availableProcessors()));
+			expectedLines.add("\tMemory \\(bytes\\): \\d*/\\d*");
+			expectedLines.add(SimpleFormat.format("\tBase path: {}",new File(".").getCanonicalPath()));
+			expectedLines.add("\tVersion: unknown/unknown");
+			expectedLines.add(figlet.line(_name,(char)'='));
+		}
 
-			Standalone.builder()
-								.supplier(() -> _ignitable)
-								.name(_name)
-								.bannerFont(_fontURL)
-								.console(message -> console.add(message))
-							.build()
-								.ignite();
-			
-			Assertions.assertEquals(line,console.poll());
-			Assertions.assertEquals(banner,console.poll());
-			Assertions.assertEquals(linesimple,console.poll());
-			Assertions.assertEquals(javaVersion,console.poll());
-			Assertions.assertEquals(cores,console.poll());
-			Assertions.assertEquals(memory,console.poll());
-			Assertions.assertEquals(basePath,console.poll());
-			Assertions.assertEquals(version,console.poll());
-			Assertions.assertEquals(line,console.poll());
+		new Expectations(){{
+			_ignitable.getClass(); 
+		}};
+
+		Standalone.builder(() -> _ignitable)
+						.name(_name)
+						.bannerFont(_fontURL)
+						.console(message -> console.add(message))
+					.build()
+						.ignite();
+
+		Assertions.assertLinesMatch(expectedLines, new ArrayList<String>(console));
 	}
 
 	@ParameterizedTest(name = "Ignite with name but showbanner at false shouldn't print a banner")
@@ -529,14 +526,13 @@ public class StandaloneTest {
 			new Expectations(){{
 				_ignitable.getClass(); 
 			}};
-			Standalone.builder()
-								.supplier(() -> _ignitable)
-								.name(_name)
-								.showBanner(false)
-								.bannerFont(_fontURL)
-								.console(message -> console.add(message))
-							.build()
-								.ignite();
+			Standalone.builder(() -> _ignitable)
+							.name(_name)
+							.showBanner(false)
+							.bannerFont(_fontURL)
+							.console(message -> console.add(message))
+						.build()
+							.ignite();
 			
 			Assertions.assertNull(console.poll());
 	}
@@ -547,11 +543,10 @@ public class StandaloneTest {
 	public void figletWrongFileFormat(final @Mocked Ignitable _ignitable) throws MalformedURLException{
 		
 		//Execute
-		Standalone standalone=Standalone.builder()
-														.supplier(() -> _ignitable)
-														.name("name")
-														.bannerFont(Paths.get("./src/test/resources/logging.properties").toUri().toURL())
-													.build();
+		Standalone standalone=Standalone.builder(() -> _ignitable)
+											.name("name")
+											.bannerFont(Paths.get("./src/test/resources/logging.properties").toUri().toURL())
+										.build();
 			
 		Assertions.assertThrows(Figlet.NoFigletFontFormatException.class
 										,() -> standalone.ignite()
@@ -575,12 +570,11 @@ public class StandaloneTest {
 		}};
 		
 		//Execute
-		Standalone standalone=Standalone.builder()
-														.supplier(() -> _ignitable)
-														.parameters(StandaloneAppTestParameter.class)
-														.console(message -> console.add(message))
-													.build()
-														.ignite();
+		Standalone standalone=Standalone.builder(() -> _ignitable)
+											.parameters(StandaloneAppTestParameter.class)
+											.console(message -> console.add(message))
+										.build()
+											.ignite();
 			
 		Assertions.assertEquals(new MandatoryParameterNotProvided(StandaloneAppTestParameter.BOOLEANVALUE).getMessage(),console.poll());
 		Assertions.assertEquals(Parameter.getHelp(StandaloneAppTestParameter.class),console.poll());
@@ -603,14 +597,13 @@ public class StandaloneTest {
 		}};
 
 		//Execute
-		Standalone standalone=Standalone.builder()
-														.supplier(() -> _ignitable)
-														.parameters(StandaloneAppTestParameter.class)
-														.parameters(StandaloneAppTestParameter2.class)
-														.console(message -> console.add(message))
-														.arguments(new String[]{"-booleanvalue:true","-intvalue:2234","-longvalue:3243321312","-floatvalue:3123.32","-doublevalue:3123.32","-stringvalue:TEST","-enumvalue:ENUMVALUE"})
-													.build()
-														.ignite();
+		Standalone standalone=Standalone.builder(() -> _ignitable)
+											.parameters(StandaloneAppTestParameter.class)
+											.parameters(StandaloneAppTestParameter2.class)
+											.console(message -> console.add(message))
+											.arguments(new String[]{"-booleanvalue:true","-intvalue:2234","-longvalue:3243321312","-floatvalue:3123.32","-doublevalue:3123.32","-stringvalue:TEST","-enumvalue:ENUMVALUE"})
+										.build()
+											.ignite();
 
 		Assertions.assertEquals(new MandatoryParameterNotProvided(StandaloneAppTestParameter2.ADDITIONALBOOLEANVALUE).getMessage(),console.poll());
 		Assertions.assertEquals(Parameter.getHelp(Stream.of(StandaloneAppTestParameter.class,StandaloneAppTestParameter2.class).collect(Collectors.toList())),console.poll());
@@ -630,7 +623,7 @@ public class StandaloneTest {
 		
 		AtomicBoolean called=new AtomicBoolean(false);
 		
-		Standalone.self=new Standalone(() -> _ignitable, null, true, null, null, null, null,false){
+		Standalone.self=new Standalone(() -> _ignitable, null, null,true, null, null, null,null,null, false){
 			@Override
 			public void extinguish(int _exitCode) {
 				Assertions.assertEquals(2,_exitCode);
@@ -648,20 +641,31 @@ public class StandaloneTest {
 		
 		final List parameters=Stream.of(StandaloneAppTestParameter.class,StandaloneAppTestParameter2.class).collect(Collectors.toList());
 		
-		Standalone.self=new Standalone(() -> _ignitable, null, true, parameters, null, null, null,false);
+		Standalone.self=new Standalone(() -> _ignitable, null, null,true,null, parameters, null, null,null,false);
 
 		List actualParameters=Standalone.getParametersClasses();
 			
 		Assertions.assertEquals(parameters, actualParameters);
 	}
-
+	
+	@Test
+	@DisplayName("Static getDescription method should return the description provided")
+	@SuppressWarnings("unchecked")
+	public void getDescription(final @Mocked Ignitable _ignitable){
+		
+		Assertions.assertEquals( "my-description", Standalone.builder(() -> _ignitable)
+																	.description("my-description")
+																.build()
+																	.getDescription());
+	}
+	
 	@Test
 	@DisplayName("Static getParametersClasses method should return empty list if not any parameter added")
 	@SuppressWarnings("unchecked")
 	public void getEmptyParameters(final @Mocked Ignitable _ignitable){
 		
 		final List parameters=Collections.emptyList();
-		Standalone.self=new Standalone(() -> _ignitable, null, true, parameters, null, null, null,false);
+		Standalone.self=new Standalone(() -> _ignitable, null,null, true, null, parameters, null,null, null,false);
 		
 		List actualParameters=Standalone.getParametersClasses();
 			
@@ -673,7 +677,7 @@ public class StandaloneTest {
 	public void getNullParameters(final @Mocked Ignitable _ignitable){
 		
 		final List parameters=Collections.emptyList();
-		Standalone.self=new Standalone(() -> _ignitable, null, true, null, null, null, null,false);
+		Standalone.self=new Standalone(() -> _ignitable, null, null,true, null, null, null,null, null,false);
 		
 		List actualParameters=Standalone.getParametersClasses();
 			
@@ -686,20 +690,32 @@ public class StandaloneTest {
 	public void getHelp(final @Mocked Ignitable _ignitable){
 		
 		final List parameters=Stream.of(StandaloneAppTestParameter.class,StandaloneAppTestParameter2.class).collect(Collectors.toList());
-		Standalone.self=new Standalone(() -> _ignitable, null, true, parameters, null, null, null,false);
+		Standalone.self=new Standalone(() -> _ignitable, null,null, true, null, parameters, null,null, null,false);
 		
 		String actualHelp=Standalone.getHelp();
 			
 		Assertions.assertEquals(Parameter.getHelp(parameters), actualHelp);
 	}
-
+	@Test
+	@DisplayName("Static getHelp method should return the help of all parameters provided and using the description if present")
+	@SuppressWarnings("unchecked")
+	public void getHelpWithDesc(final @Mocked Ignitable _ignitable){
+		
+		final List parameters=Stream.of(StandaloneAppTestParameter.class,StandaloneAppTestParameter2.class).collect(Collectors.toList());
+		Standalone.self=new Standalone(() -> _ignitable, null,"mydesc", true, null, parameters, null,null, null,false);
+		
+		String actualHelp=Standalone.getHelp();
+			
+		Assertions.assertEquals("mydesc\n"+Parameter.getHelp(parameters), actualHelp);
+	}
+	
 	@Test
 	@DisplayName("Static getHelp method should return empty string if not any parameter added")
 	@SuppressWarnings("unchecked")
 	public void getEmptyHelp(final @Mocked Ignitable _ignitable){
 		
 		final List parameters=Collections.emptyList();
-		Standalone.self=new Standalone(() -> _ignitable, null, true, parameters, null, null, null,false);
+		Standalone.self=new Standalone(() -> _ignitable, null, null,true, null, parameters, null,null, null,false);
 		
 		String actualHelp=Standalone.getHelp();
 			
@@ -710,7 +726,7 @@ public class StandaloneTest {
 	@DisplayName("Static getHelp method should return empty string if null parameters")
 	public void getNullHelp(final @Mocked Ignitable _ignitable){
 		
-		Standalone.self=new Standalone(() -> _ignitable, null, true, null, null, null, null,false);
+		Standalone.self=new Standalone(() -> _ignitable, null, null,true, null, null, null,null, null,false);
 
 		String actualHelp=Standalone.getHelp();
 			
@@ -723,11 +739,10 @@ public class StandaloneTest {
 	public void consoleTest(final @Mocked Ignitable _ignitable){
 		
 		Queue console=new LinkedList();
-		Standalone standalone=Standalone.builder()
-														.supplier(() -> _ignitable)
-														.console(message -> console.add(message))
-														.verbose(true)
-													.build();
+		Standalone standalone=Standalone.builder(() -> _ignitable)
+											.console(message -> console.add(message))
+											.verbose(true)
+										.build();
 
 		standalone.getConsole().info("info-message-1");
 		standalone.getConsole().error("error-message-2");

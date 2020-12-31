@@ -24,7 +24,7 @@ import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
  */
 public class FontNotReadable extends RuntimeException{
 	
-	private static final String MESSAGE="Font {} not readable or not found";
+	protected static final String MESSAGE="Font {} not readable or not found";
 	
 	/**
 	 * Mandatory argument not provided exception constructor

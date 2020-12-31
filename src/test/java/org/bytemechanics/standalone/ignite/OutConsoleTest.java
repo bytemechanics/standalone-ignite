@@ -15,7 +15,7 @@
  */
 package org.bytemechanics.standalone.ignite;
 
-import org.bytemechanics.standalone.ignite.mocks.StandaloneAppTestParameter;
+import org.bytemechanics.standalone.ignite.OutConsole;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
@@ -24,27 +24,23 @@ import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import mockit.Expectations;
 import mockit.Mocked;
-import org.bytemechanics.standalone.ignite.exceptions.InvalidParameter;
-import org.bytemechanics.standalone.ignite.exceptions.NullOrEmptyMandatoryParameter;
 import org.bytemechanics.standalone.ignite.internal.commons.functional.LambdaUnchecker;
-import org.junit.jupiter.api.Assertions;
+import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 
 /**
  *
  * @author afarre
  */
-public class ConsoleTest {
+public class OutConsoleTest {
 
 	@BeforeAll
 	public static void setup() throws IOException {
-		System.out.println(">>>>> ConsoleTest >>>> setup");
+		System.out.println(">>>>> OutConsoleTest >>>> setup");
 		try (InputStream inputStream = LambdaUnchecker.class.getResourceAsStream("/logging.properties")) {
 			LogManager.getLogManager().readConfiguration(inputStream);
 		} catch (final IOException e) {
@@ -58,35 +54,38 @@ public class ConsoleTest {
 		System.out.println(">>>>> " + this.getClass().getSimpleName() + " >>>> " + testInfo.getTestMethod().map(Method::getName).orElse("Unkown") + "" + testInfo.getTags().toString() + " >>>> " + testInfo.getDisplayName());
 	}
 	
-	@ParameterizedTest(name = "Console log with verbose disabled")
-	public void verboseDisabled(final String _args, final @Mocked Consumer<String> _underlayingConsole){
+	
+	@Test()
+	@DisplayName("Console log with verbose disabled")
+	public void verboseDisabled(final @Mocked Consumer<String> _underlayingConsole){
 
-		Console console=new Console(_underlayingConsole, false);
+		OutConsole console=new OutConsole(_underlayingConsole,(message,args) -> SimpleFormat.format(message, args), false);
 
 		new Expectations(){{
-			_underlayingConsole.accept("error-message"); times=1;
-			_underlayingConsole.accept("info-message"); times=1;
-			_underlayingConsole.accept("verbose-message"); times=0;
+			_underlayingConsole.accept("init error-message 1"); times=1;
+			_underlayingConsole.accept("init2 info-message 2"); times=1;
+			_underlayingConsole.accept("init3 verbose-message 3"); times=0;
 		}};
 		
-		console.error("error-message");
-		console.info("info-message");
-		console.verbose("verbose-message");
+		console.error("{} error-message {}","init",1);
+		console.info("{} info-message {}","init2",2);
+		console.verbose("{} verbose-message {}","init3",3);
 	}
 	
-	@ParameterizedTest(name = "Console log with verbose enabled")
-	public void verboseEnabled(final String _args, final @Mocked Consumer<String> _underlayingConsole){
+	@Test()
+	@DisplayName("Console log with verbose enabled")
+	public void verboseEnabled(final @Mocked Consumer<String> _underlayingConsole){
 
-		Console console=new Console(_underlayingConsole, true);
+		OutConsole console=new OutConsole(_underlayingConsole,(message,args) -> SimpleFormat.format(message, args), true);
 
 		new Expectations(){{
-			_underlayingConsole.accept("error-message"); times=1;
-			_underlayingConsole.accept("info-message"); times=1;
-			_underlayingConsole.accept("verbose-message"); times=1;
+			_underlayingConsole.accept("init error-message 1"); times=1;
+			_underlayingConsole.accept("init2 info-message 2"); times=1;
+			_underlayingConsole.accept("init3 verbose-message 3"); times=1;
 		}};
 		
-		console.error("error-message");
-		console.info("info-message");
-		console.verbose("verbose-message");
+		console.error("{} error-message {}","init",1);
+		console.info("{} info-message {}","init2",2);
+		console.verbose("{} verbose-message {}","init3",3);
 	}
 }

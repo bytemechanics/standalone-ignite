@@ -15,6 +15,7 @@
  */
 package org.bytemechanics.standalone.ignite.exceptions;
 
+import java.util.Optional;
 import org.bytemechanics.standalone.ignite.Parameter;
 import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
 
@@ -25,7 +26,8 @@ import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
  */
 public class UnparseableParameter extends ParameterException{
 	
-	private static final String MESSAGE="Unparseable parameter {} with value {}";
+	protected static final String MESSAGE_WITH_VALUE="Unparseable parameter {} with value {} root cause {}.";
+	protected static final String MESSAGE_WITHOUT_VALUE="Unparseable parameter {} root cause {}";
 	
 	/**
 	 * Constructor with the parameter value
@@ -34,7 +36,16 @@ public class UnparseableParameter extends ParameterException{
 	 * @param _cause exception cause
 	 */
 	public UnparseableParameter(final Parameter _parameter,final String _value,final Throwable _cause) {
-		super(_parameter,SimpleFormat.format(MESSAGE, _parameter.name(),_value),_cause);	
+		super(_parameter
+				,SimpleFormat.format(MESSAGE_WITH_VALUE
+										, Optional.ofNullable(_parameter)
+														.map(Parameter::name)
+													.orElse(null)
+										,_value
+										, Optional.ofNullable(_cause)
+														.map(Throwable::getMessage)
+													.orElse(null))
+				,_cause);	
 	}
 
 	/**
@@ -43,6 +54,14 @@ public class UnparseableParameter extends ParameterException{
 	 * @param _cause exception cause
 	 */
 	public UnparseableParameter(final Parameter  _parameter,final Throwable _cause) {
-		super(_parameter,SimpleFormat.format("Unparseable parameter {}. {}", _parameter.name(), _cause.getMessage()),_cause);	
+		super(_parameter
+				,SimpleFormat.format(MESSAGE_WITHOUT_VALUE
+										, Optional.ofNullable(_parameter)
+														.map(Parameter::name)
+													.orElse(null)
+										, Optional.ofNullable(_cause)
+														.map(Throwable::getMessage)
+													.orElse(null))
+				,_cause);	
 	}
 }

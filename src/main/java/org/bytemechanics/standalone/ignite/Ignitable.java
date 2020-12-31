@@ -87,6 +87,41 @@ public interface Ignitable {
 	}
 
 	/**
+	 * Return optional of console if standalone has been recovered via getStandalone Method
+	 * @return Optional of console
+	 * @see Console
+	 * @see Ignitable#getStandalone() 
+	 * @see Ignitable#setStandalone(org.bytemechanics.standalone.ignite.Standalone) 
+	 * @since 2.0.0
+	 */
+	public default Optional<Console> getConsole(){
+		return getStandalone()
+					.map(Standalone::getConsole);
+	}
+	
+	/**
+	 * Override this method in order to retrieve Standalone instance from the ignitable class
+	 * By default this method allways return an empty optional. Is responsibility of the implementation 
+	 * to store the standalone instance overrinding setStandalone and override this method to retrieve the instance
+	 * @return An optional of standalone instance that created this ignitable instance (by default always empty implementing class must override)
+	 * @see Standalone
+	 * @see Ignitable#setStandalone(org.bytemechanics.standalone.ignite.Standalone) 
+	 * @since 2.0.0
+	 */
+	public default Optional<Standalone> getStandalone(){
+		return Optional.empty();
+	}
+	
+	/**
+	 * Override this method in order to get access to your Standalone instance
+	 * @param _standalone standalone instance that created this ignitable instance
+	 * @see Standalone
+	 * @since 2.0.0
+	 */
+	public default void setStandalone(final Standalone _standalone){
+	}
+	
+	/**
 	 * Override this method to implement special tasks after graceful shutdown
 	 */
 	public default void afterShutdown(){}

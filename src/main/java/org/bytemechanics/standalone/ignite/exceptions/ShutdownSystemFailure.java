@@ -21,7 +21,7 @@ package org.bytemechanics.standalone.ignite.exceptions;
  */
 public class ShutdownSystemFailure extends RuntimeException{
 	
-	private static final String MESSAGE="Shutdown system failure";
+	protected static final String MESSAGE="Shutdown system failure";
 	
 	/**
 	 * Shutdown system failure exception constructor

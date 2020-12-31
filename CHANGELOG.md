@@ -1,3 +1,19 @@
+# Version 2.0.0 (2020/11/30)
+---
+
+## Changes
+* Fixed some possible problems in exceptions due null parameters
+* Added unit tests for exceptions
+* Added utility abstract class IgnitableAdapter in order to reduce repeated code
+* Added utility method in Ignitable interface to recover Console
+* Added utility method in Ignitable to recover the original Standalone instance
+* Added an additional description to the Standalone class in order to improve help messages
+* Added an console and consoleFormatter to Standalone builder in order to allow change console class and console formatter
+* Changed Standalone builder() method to add mandatory parameter Ignitable in order to clarify that's mandatory
+* Console abstracted to an interface
+* Added shell utility classes
+
+
 # Version 1.2.0 (2020/11/30)
 ---
 
