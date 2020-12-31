@@ -5,3 +5,6 @@ org.bytemechanics.standalone.ignite.internal
 org.bytemechanics.standalone.ignite.internal.commons.functional
 org.bytemechanics.standalone.ignite.internal.commons.reflection
 org.bytemechanics.standalone.ignite.internal.commons.string
+org.bytemechanics.standalone.ignite.shell
+org.bytemechanics.standalone.ignite.shell.beans
+org.bytemechanics.standalone.ignite.shell.exceptions
