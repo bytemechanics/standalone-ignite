@@ -43,6 +43,7 @@ import org.bytemechanics.standalone.ignite.exceptions.ParameterException;
 import org.bytemechanics.standalone.ignite.internal.commons.functional.LambdaUnchecker;
 import org.bytemechanics.standalone.ignite.internal.commons.string.Figlet;
 import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
+import org.bytemechanics.standalone.ignite.mocks.MockedIgnitableAdapter;
 import org.bytemechanics.standalone.ignite.mocks.StandaloneAppTestParameter;
 import org.bytemechanics.standalone.ignite.mocks.StandaloneAppTestParameter2;
 import org.bytemechanics.standalone.ignite.mocks.StandaloneAppTestParameter3;
@@ -296,6 +297,19 @@ public class StandaloneTest {
 			_ignitable.afterStartup(); times=0;
 			_ignitable.startupException(expectedException); times=1;
 			_ignitable.close(); times=1;
+		}};
+		
+		Standalone.builder(() -> _ignitable)
+					.build()
+						.ignite();
+	}	
+	
+	@Test
+	@DisplayName("On IgnitableAdapter must assign the current standalone instance")
+	public void ignitableAdapterStandaloneInitialization(final @Mocked MockedIgnitableAdapter _ignitable) {
+
+		new Expectations() {{
+			_ignitable.setStandalone((Standalone)any); times=1;
 		}};
 		
 		Standalone.builder(() -> _ignitable)
