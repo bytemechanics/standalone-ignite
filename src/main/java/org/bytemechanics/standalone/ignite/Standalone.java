@@ -70,7 +70,7 @@ public class Standalone{
 	/** Arguments from the command line execution. OPTIONAL */
 	private final String[] arguments;
 	/** console consumer by default java.util.logging. OPTIONAL*/
-	private final OutConsole console;
+	private final Console console;
 
 	/** Internal ignitable instance */
 	private Ignitable instance;
@@ -96,8 +96,7 @@ public class Standalone{
 				, _bannerFont
 				, _parameters
 				, _arguments
-				, new OutConsole((_console!=null)? _console : getDefaultConsole(),_consoleFormat,_verbose)
-				, _verbose);
+				, new OutConsole((_console!=null)? _console : getDefaultConsole(),_consoleFormat,_verbose));
 	}
 	/**
 	 * Standalone constructor
@@ -109,9 +108,8 @@ public class Standalone{
 	 * @param _parameters List of parameters enum to parse
 	 * @param _arguments arguments to use
 	 * @param _console console to use
-	 * @param _verbose console verbose enabler
 	 */
-	protected Standalone(final Supplier<Ignitable> _supplier,final String _name,final String _description,final boolean _showBanner,final URL _bannerFont,final List<Class<? extends Enum<? extends Parameter>>> _parameters,final String[] _arguments,final Console _console,final boolean _verbose){
+	protected Standalone(final Supplier<Ignitable> _supplier,final String _name,final String _description,final boolean _showBanner,final URL _bannerFont,final List<Class<? extends Enum<? extends Parameter>>> _parameters,final String[] _arguments,final Console _console){
 		if(_supplier==null)
 			throw new NullPointerException("Mandatory \"supplier\" can not be null");
 		this.name=_name;
@@ -122,7 +120,7 @@ public class Standalone{
 		this.arguments=((_arguments==null)||_arguments.length==0)? new String[0] : _arguments;
 		this.parameters=_parameters;
 		this.instance=null;
-		this.console=new OutConsole(_console,_verbose);
+		this.console=_console;
 	}
 	
 	/**
@@ -378,6 +376,21 @@ public class Standalone{
 	} 
 	
 	/**
+	 * Assigns standalone if possible
+	 * @return The same instance provided
+	 */
+	protected Standalone registerStandalone(){
+
+		final Standalone reply=this;
+		
+		if(IgnitableAdapter.class.isAssignableFrom(this.instance.getClass())){
+			((IgnitableAdapter)reply.instance).setStandalone(this);
+		}
+		
+		return reply;
+	}
+	
+	/**
 	 * Call this method to ignite the standalone application this method will:
 	 * <ul>
 	 *   <li>Get standalone instance</li>
@@ -394,10 +407,11 @@ public class Standalone{
 		try{
 			instantiate()
 				.addShutdownHook()
-					.parseParameters()
-						.validateParameters()
-							.printBanner()
-								.startup();
+				.registerStandalone()
+				.parseParameters()
+				.validateParameters()
+				.printBanner()
+				.startup();
 		}catch(MandatoryParameterNotProvided e){
 			this.console.error(e.getMessage());
 			this.console.error(Parameter.getHelp(this.parameters));
@@ -618,7 +632,7 @@ public class Standalone{
 
 		public Standalone build() {
 			if(this.consoleInstance!=null){
-				Standalone.self=new Standalone(supplier,name,description,showBanner,bannerFont,Collections.unmodifiableList(parameters), arguments,consoleInstance,verbose);
+				Standalone.self=new Standalone(supplier,name,description,showBanner,bannerFont,Collections.unmodifiableList(parameters), arguments,consoleInstance);
 			}else{
 				Standalone.self=new Standalone(supplier,name,description,showBanner,bannerFont,Collections.unmodifiableList(parameters), arguments,console,consoleFormat,verbose);
 			}

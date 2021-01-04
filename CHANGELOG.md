@@ -1,4 +1,12 @@
-# Version 2.0.0 (2020/11/30)
+# Version 2.0.0 (2020/01/04)
+---
+
+## Changes
+* Automatic Standalone instance to IgnitableAdapter instances
+* Change standalone console attribute from OutConsole to the interface
+
+
+# Version 2.0.0 (2021/01/01)
 ---
 
 ## Changes

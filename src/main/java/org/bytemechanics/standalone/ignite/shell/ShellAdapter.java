@@ -82,11 +82,13 @@ public abstract class ShellAdapter extends IgnitableAdapter {
 						.map(tuple -> tuple.left(tuple.left().toLowerCase()))
 						.map(tuple -> tuple.right(tuple.right().showBanner(false)))
 						.map(tuple -> tuple.right((BiConsumer<String[],OutConsole>)
-														(args,console) -> tuple.right()
+														(args,console) -> {
+															tuple.right()
 																			.arguments(args)
 																			.console(console)
 																		.build()
-																			.ignite()))
+																			.ignite();
+																	}))
 						.forEach(tuple -> reply.put(tuple.left(), tuple.right()));
 		reply.put("exit", (args,console) -> stopExecution=true);
 		reply.put("help", (args,console) -> console.info("Available commands are: {}\n"
