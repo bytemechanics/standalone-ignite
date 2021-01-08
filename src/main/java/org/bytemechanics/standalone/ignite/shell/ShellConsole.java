@@ -16,6 +16,7 @@
 package org.bytemechanics.standalone.ignite.shell;
 
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import org.bytemechanics.standalone.ignite.Console;
 import org.bytemechanics.standalone.ignite.OutConsole;
@@ -27,8 +28,17 @@ import org.bytemechanics.standalone.ignite.OutConsole;
  */
 public class ShellConsole extends OutConsole implements Console {
 
+	protected final Consumer<String> writer;
 	protected final Supplier<String> reader;
 
+	/**
+	 * Shell console constructor with the default system console
+	 * @param _formatter console message formatter
+	 * @param _verboseEnabled flag to indicate if the console must print verbose messages
+	 */
+	public ShellConsole(final BiFunction<String,Object[],String> _formatter,final boolean _verboseEnabled){
+		this(System.console(),_formatter,_verboseEnabled);
+	}
 	/**
 	 * Shell console constructor
 	 * @param _console java standard console instance
@@ -36,10 +46,19 @@ public class ShellConsole extends OutConsole implements Console {
 	 * @param _verboseEnabled flag to indicate if the console must print verbose messages
 	 */
 	public ShellConsole(final java.io.Console _console,final BiFunction<String,Object[],String> _formatter,final boolean _verboseEnabled){
-		super(_formatter,_verboseEnabled,_console::format,_console::format,_console::format);
+		super(_formatter,_verboseEnabled,message -> _console.printf(message+"\n"),message -> _console.printf(message+"\n"),message -> _console.printf(message+"\n"));
+		this.writer=_console::printf;
 		this.reader=_console::readLine;
 	}
 
+	/**
+	 * Method to write to console without new-line
+	 * @since 2.0.2
+	 */
+	public void write(final String _message,final Object... _args){
+		this.writer.accept(formatter.apply(_message, _args));
+	}
+	
 	/**
 	 * Method to recover the text writed to console by the user until next carriage return
 	 * @return read message

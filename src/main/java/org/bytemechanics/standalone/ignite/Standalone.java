@@ -524,6 +524,14 @@ public class Standalone{
 			this.name = _name;
 			return this;
 		}
+		/** 
+		* Get the current configured name 
+		* @return current configured name 
+		*/
+		public String getName() {
+			return this.name;
+		}
+		
 		/**
 		* Standalone description for help purposes. OPTIONAL
 		* @param _name name of the application to use as banner if no name shows no banner
@@ -534,6 +542,14 @@ public class Standalone{
 			this.description = _description;
 			return this;
 		}
+		/** 
+		* Get the current configured description 
+		* @return current configured description 
+		*/
+		public String getDescription() {
+			return this.description;
+		}
+		
 		/**
 		* Show banner. flag to activate the banner, by default is active but is only shown if the standalone has assigned name
 		* @param _showBanner flag to show banner (by default true)

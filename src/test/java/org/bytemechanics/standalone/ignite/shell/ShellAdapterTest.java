@@ -37,8 +37,10 @@ import org.bytemechanics.standalone.ignite.Ignitable;
 import org.bytemechanics.standalone.ignite.OutConsole;
 import org.bytemechanics.standalone.ignite.Standalone;
 import org.bytemechanics.standalone.ignite.internal.commons.functional.LambdaUnchecker;
-import org.bytemechanics.standalone.ignite.internal.commons.functional.Tuple;
 import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
+import org.bytemechanics.standalone.ignite.mocks.MockedIgnitableAdapter;
+import org.bytemechanics.standalone.ignite.mocks.MockedIgnitableAutocloseable;
+import org.bytemechanics.standalone.ignite.mocks.MockedIgnitableRunnable;
 import org.bytemechanics.standalone.ignite.shell.beans.CommandExecution;
 import org.bytemechanics.standalone.ignite.shell.exceptions.NoStandaloneInstance;
 import org.bytemechanics.standalone.ignite.shell.exceptions.UnknownCommand;
@@ -151,7 +153,7 @@ public class ShellAdapterTest {
 																		.collect(Collectors.toMap(val -> val,val -> _builder));
 		}};
 		
-		Assertions.assertEquals("ignitablecommand1,ignitablecommand2",_adapter.getCommandList());
+		Assertions.assertEquals("ignitablecommand1,ignitablecommand2,exit,help",_adapter.getCommandList());
 	}
 	
 	@Test
@@ -329,7 +331,7 @@ public class ShellAdapterTest {
 
 	@Test
 	@SuppressWarnings({"ThrowableResultIgnored"})
-	public void interactiveExecution(@Mocked ShellConsole _console,@Mocked BiConsumer<String[],OutConsole> _consumer1,@Mocked BiConsumer<String[],OutConsole> _consumer2) {
+	public void interactiveExecution(@Mocked ShellConsole _console,@Mocked BiConsumer<String[],OutConsole> _consumer1,@Mocked BiConsumer<String[],OutConsole> _consumer2,@Mocked BiConsumer<String[],OutConsole> _consumer3) {
 		
 		ShellAdapter instance=new ShellAdapter() {
 			@Override
@@ -342,33 +344,41 @@ public class ShellAdapterTest {
 			}	
 			@Override
 			public Map<Class<? extends Ignitable>,Standalone.StandaloneBuilder> getIgnitableShellCommands(){
+				Map<Class<? extends Ignitable>,Standalone.StandaloneBuilder> reply=new HashMap<>();
+				reply.put(MockedIgnitableAdapter.class, Standalone.builder(MockedIgnitableAdapter::new ).description("my-desc1"));
+				reply.put(MockedIgnitableAutocloseable.class, Standalone.builder(MockedIgnitableAutocloseable::new ).name("my-name1"));
+				reply.put(MockedIgnitableRunnable.class, Standalone.builder(MockedIgnitableRunnable::new ));
 				return null; 
 			}
 		};
 
 		Map<String,BiConsumer<String[],OutConsole>> availableCommands=new HashMap<>();
-		availableCommands.put("my-command1", _consumer1);
-		availableCommands.put("my-command_2", _consumer2);
+		availableCommands.put("mockedignitableadapter", _consumer1);
+		availableCommands.put("mockedignitableautocloseable", _consumer2);
+		availableCommands.put("mockedignitablerunnable", _consumer3);
 		availableCommands.put("exit", (args,console) -> instance.stopExecution=true);
-		availableCommands.put("help", (args,console) -> console.info("Available commands are: {}\n"
+		availableCommands.put("help", (args,console) -> console.info("Available commands are:\n"
+															+ "{}"
 															+ "To exit from shell please use 'exit' command\n"
 															+ "To get help with a certain command write: <command> -help"
-														,"my-command1,my-command_2"));
+														,"\tmockedignitableadapter - my-desc1\n"
+														+ "\tmockedignitableautocloseable - my-name1\n"
+														+ "\tmockedignitablerunnable - no description provided\n"));
 		
 		new Expectations() {{
-			_console.info(">> "); times=6;
-			_console.info("Available commands are: {}\nTo exit from shell please use 'exit' command\nTo get help with a certain command write: <command> -help","my-command1,my-command_2"); times=1;
+			_console.write(">> "); times=6;
+			_console.info("Available commands are:\n{}To exit from shell please use 'exit' command\nTo get help with a certain command write: <command> -help","\tmockedignitableadapter - my-desc1\n\tmockedignitableautocloseable - my-name1\n\tmockedignitablerunnable - no description provided\n"); times=1;
 			_console.read(); times=6; 
-				result="my-Command1 1 dsfd fdf d fd";
-				result="My-Command_2 2 ds df gf";
-				result="My-Command_2 3 ds df gf";
+				result="mockedignitableadapter 1 dsfd fdf d fd";
+				result="mockedignitableadapter 2 ds df gf";
+				result="mockedignitableautocloseable 3 ds df gf";
 				result="help";
-				result="My-Command_2 4 ds df gf";
+				result="mockedignitablerunnable 4 ds df gf";
 				result="exit";
 			_consumer1.accept(new String[]{"1","dsfd","fdf","d","fd"}, _console); times=1;
-			_consumer2.accept(new String[]{"2","ds","df","gf"}, _console); times=1;
+			_consumer1.accept(new String[]{"2","ds","df","gf"}, _console); times=1;
 			_consumer2.accept(new String[]{"3","ds","df","gf"}, _console); times=1;
-			_consumer2.accept(new String[]{"4","ds","df","gf"}, _console); times=1;
+			_consumer3.accept(new String[]{"4","ds","df","gf"}, _console); times=1;
 		}};
 		
 		instance.interactiveExecution(availableCommands);

@@ -1,4 +1,14 @@
-# Version 2.0.0 (2020/01/04)
+# Version 2.0.2 (2021/01/08)
+---
+
+## Changes
+* Fixed lack of new line on ShellConsole messages
+* Fixed Shell exit when a unknonw command is called on interactive execution
+* Fixed unkwown command message to add help and exit
+* Added ShellConsole method to write directly at console without new-line for the cursor
+
+
+# Version 2.0.1 (2020/01/04)
 ---
 
 ## Changes

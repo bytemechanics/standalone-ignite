@@ -57,9 +57,9 @@ public class ShellConsoleTest {
 		final ShellConsole instance = new ShellConsole(_console, (message,args) -> SimpleFormat.format(message, args), true);
 		
 		new Expectations(){{
-			_console.format("my message yeah as info message"); times=1;
-			_console.format("my message yeah as error message"); times=1;
-			_console.format("my message yeah as verbose message"); times=1;
+			_console.printf("my message yeah as info message\n"); times=1;
+			_console.printf("my message yeah as error message\n"); times=1;
+			_console.printf("my message yeah as verbose message\n"); times=1;
 		}};
 		
 		instance.info("my message {} as {} message", "yeah","info");
@@ -72,9 +72,9 @@ public class ShellConsoleTest {
 		final ShellConsole instance = new ShellConsole(_console, (message,args) -> SimpleFormat.format(message, args), false);
 		
 		new Expectations(){{
-			_console.format("my message yeah as info message"); times=1;
-			_console.format("my message yeah as error message"); times=1;
-			_console.format("my message yeah as verbose message"); times=0;
+			_console.printf("my message yeah as info message\n"); times=1;
+			_console.printf("my message yeah as error message\n"); times=1;
+			_console.printf("my message yeah as verbose message\n"); times=0;
 		}};
 		
 		instance.info("my message {} as {} message", "yeah","info");
@@ -88,9 +88,9 @@ public class ShellConsoleTest {
 		final ShellConsole instance = new ShellConsole(_console, (message,args) -> SimpleFormat.format(message, args), true);
 		
 		new Expectations(){{
-			_console.format("my message yeah as info message"); times=1;
-			_console.format("my message yeah as error message"); times=1;
-			_console.format("my message yeah as verbose message"); times=1;
+			_console.printf("my message yeah as info message\n"); times=1;
+			_console.printf("my message yeah as error message\n"); times=1;
+			_console.printf("my message yeah as verbose message\n"); times=1;
 			_console.readLine(); times=1; result="my read message";
 		}};
 		

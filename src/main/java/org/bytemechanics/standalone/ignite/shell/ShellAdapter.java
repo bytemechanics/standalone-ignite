@@ -29,6 +29,7 @@ import org.bytemechanics.standalone.ignite.IgnitableAdapter;
 import org.bytemechanics.standalone.ignite.OutConsole;
 import org.bytemechanics.standalone.ignite.Standalone;
 import org.bytemechanics.standalone.ignite.internal.commons.functional.Tuple;
+import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
 import org.bytemechanics.standalone.ignite.shell.beans.CommandExecution;
 import org.bytemechanics.standalone.ignite.shell.exceptions.NoStandaloneInstance;
 import org.bytemechanics.standalone.ignite.shell.exceptions.UnknownCommand;
@@ -58,8 +59,6 @@ public abstract class ShellAdapter extends IgnitableAdapter {
 					.orElseThrow(() -> new UnknownConsoleType(getConsole().orElse(null)));
 	}
 	
-	
-	
 	protected String getCommandList(){
 		return getIgnitableShellCommands()
 					.keySet()
@@ -67,7 +66,7 @@ public abstract class ShellAdapter extends IgnitableAdapter {
 							.map(Class::getSimpleName)
 							.map(String::toLowerCase)
 							.sorted()
-						.collect(Collectors.joining(","));
+						.collect(Collectors.joining(",","",",exit,help"));
 	}
 	
 	public Map<String,BiConsumer<String[],OutConsole>> getAvailableCommands(){
@@ -83,7 +82,7 @@ public abstract class ShellAdapter extends IgnitableAdapter {
 						.map(tuple -> tuple.right(tuple.right().showBanner(false)))
 						.map(tuple -> tuple.right((BiConsumer<String[],OutConsole>)
 														(args,console) -> {
-															tuple.right()
+																		tuple.right()
 																			.arguments(args)
 																			.console(console)
 																		.build()
@@ -91,10 +90,18 @@ public abstract class ShellAdapter extends IgnitableAdapter {
 																	}))
 						.forEach(tuple -> reply.put(tuple.left(), tuple.right()));
 		reply.put("exit", (args,console) -> stopExecution=true);
-		reply.put("help", (args,console) -> console.info("Available commands are: {}\n"
+		reply.put("help", (args,console) -> console.info("Available commands are:\n"
+															+ "{}"
 															+ "To exit from shell please use 'exit' command\n"
 															+ "To get help with a certain command write: <command> -help"
-														,getCommandList()));
+														,getIgnitableShellCommands()
+																.entrySet()
+																	.stream()
+																		.map(entry -> SimpleFormat.format("{} - {}"
+																											, entry.getKey().getSimpleName().toLowerCase()
+																											, (entry.getValue().getDescription()!=null)? entry.getValue().getDescription() : 
+																													(entry.getValue().getName()!=null)? entry.getValue().getName() : "no description provided"))
+																		.collect(Collectors.joining("\n\t","\t","\n"))));
 		
 		return reply;
 	}
@@ -148,11 +155,15 @@ public abstract class ShellAdapter extends IgnitableAdapter {
 	protected void interactiveExecution(final Map<String,BiConsumer<String[],OutConsole>> _availableCommands){
 		
 		while(!this.stopExecution){
-			getShell().info(">> ");
-			Optional.ofNullable(getShell().read())
-					.map(String::trim)
-					.filter(command -> !command.isEmpty())
-					.ifPresent(command -> executeCommand(_availableCommands,command));
+			getShell().write(">> ");
+			try{
+				Optional.ofNullable(getShell().read())
+						.map(String::trim)
+						.filter(command -> !command.isEmpty())
+						.ifPresent(command -> executeCommand(_availableCommands,command));
+			}catch(UnknownCommand e){
+				getShell().error(e.getMessage());
+			}
 		}
 	}	
 
