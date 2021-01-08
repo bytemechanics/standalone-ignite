@@ -24,7 +24,7 @@ import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
  */
 public class UnknownCommand extends RuntimeException{
 	
-	protected static final String MESSAGE="Unknown command {} available commands are {}";
+	protected static final String MESSAGE="Unknown command '{}' available commands are: {}";
 	
 	/**
 	 * Unknown command exception constructor
