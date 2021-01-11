@@ -34,7 +34,7 @@ import org.junit.jupiter.api.TestInfo;
 
 /**
  *
- * @author E103880
+ * @author afarre	
  */
 public class IgnitableTest {
 	

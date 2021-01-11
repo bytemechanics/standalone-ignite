@@ -34,7 +34,6 @@ import mockit.Mocked;
 import mockit.Tested;
 import org.bytemechanics.standalone.ignite.Console;
 import org.bytemechanics.standalone.ignite.Ignitable;
-import org.bytemechanics.standalone.ignite.OutConsole;
 import org.bytemechanics.standalone.ignite.Standalone;
 import org.bytemechanics.standalone.ignite.internal.commons.functional.LambdaUnchecker;
 import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
@@ -56,7 +55,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 /**
  *
- * @author E103880
+ * @author afarre
  */
 public class ShellAdapterTest {
 	
@@ -170,7 +169,7 @@ public class ShellAdapterTest {
 			_adapter.getIgnitableShellCommands(); times=1; result=commands;
 		}};
 		
-		Map<String,BiConsumer<String[],OutConsole>> actual=_adapter.getAvailableCommands();
+		Map<String,BiConsumer<String[],ShellConsole>> actual=_adapter.getAvailableCommands();
 		Assertions.assertEquals(4,actual.size());
 		Assertions.assertTrue(actual.containsKey("ignitablecommand1"));
 		Assertions.assertTrue(actual.containsKey("ignitablecommand2"));
@@ -220,9 +219,9 @@ public class ShellAdapterTest {
 
 	@Test
 	@SuppressWarnings("empty-statement")
-	public void executeCommand(@Mocked BiConsumer<String[],OutConsole> _consumer,@Mocked ShellConsole _console) {
+	public void executeCommand(@Mocked BiConsumer<String[],ShellConsole> _consumer,@Mocked ShellConsole _console) {
 		
-		Map<String,BiConsumer<String[],OutConsole>> availableCommands=Stream.of("my-command1","my-command_2")
+		Map<String,BiConsumer<String[],ShellConsole>> availableCommands=Stream.of("my-command1","my-command_2")
 																			.collect(Collectors.toMap(command -> command, command -> _consumer));
 		ShellAdapter instance=new ShellAdapter() {
 			@Override
@@ -243,9 +242,9 @@ public class ShellAdapterTest {
 	}
 	@Test
 	@SuppressWarnings({"ThrowableResultIgnored"})
-	public void executeCommandEmpty(@Mocked BiConsumer<String[],OutConsole> _consumer,@Mocked ShellConsole _console) {
+	public void executeCommandEmpty(@Mocked BiConsumer<String[],ShellConsole> _consumer,@Mocked ShellConsole _console) {
 		
-		Map<String,BiConsumer<String[],OutConsole>> availableCommands=Stream.of("my-command1","my-command_2")
+		Map<String,BiConsumer<String[],ShellConsole>> availableCommands=Stream.of("my-command1","my-command_2")
 																			.collect(Collectors.toMap(command -> command, command -> _consumer));
 		ShellAdapter instance=new ShellAdapter() {
 			@Override
@@ -266,9 +265,9 @@ public class ShellAdapterTest {
 	}
 	@Test
 	@SuppressWarnings({"ThrowableResultIgnored"})
-	public void executeCommandUnknown(@Mocked BiConsumer<String[],OutConsole> _consumer,@Mocked ShellConsole _console) {
+	public void executeCommandUnknown(@Mocked BiConsumer<String[],ShellConsole> _consumer,@Mocked ShellConsole _console) {
 		
-		Map<String,BiConsumer<String[],OutConsole>> availableCommands=Stream.of("my-command1","my-command_2")
+		Map<String,BiConsumer<String[],ShellConsole>> availableCommands=Stream.of("my-command1","my-command_2")
 																			.collect(Collectors.toMap(command -> command, command -> _consumer));
 		
 		ShellAdapter instance=new ShellAdapter() {
@@ -297,9 +296,9 @@ public class ShellAdapterTest {
 
 	@Test
 	@SuppressWarnings({"ThrowableResultIgnored"})
-	public void batchExecution(@Mocked ShellConsole _console,@Mocked BiConsumer<String[],OutConsole> _consumer1,@Mocked BiConsumer<String[],OutConsole> _consumer2) {
+	public void batchExecution(@Mocked ShellConsole _console,@Mocked BiConsumer<String[],ShellConsole> _consumer1,@Mocked BiConsumer<String[],ShellConsole> _consumer2) {
 		
-		Map<String,BiConsumer<String[],OutConsole>> availableCommands=new HashMap<>();
+		Map<String,BiConsumer<String[],ShellConsole>> availableCommands=new HashMap<>();
 		availableCommands.put("my-command1", _consumer1);
 		availableCommands.put("my-command_2", _consumer2);
 		
@@ -331,7 +330,7 @@ public class ShellAdapterTest {
 
 	@Test
 	@SuppressWarnings({"ThrowableResultIgnored"})
-	public void interactiveExecution(@Mocked ShellConsole _console,@Mocked BiConsumer<String[],OutConsole> _consumer1,@Mocked BiConsumer<String[],OutConsole> _consumer2,@Mocked BiConsumer<String[],OutConsole> _consumer3) {
+	public void interactiveExecution(@Mocked ShellConsole _console,@Mocked BiConsumer<String[],ShellConsole> _consumer1,@Mocked BiConsumer<String[],ShellConsole> _consumer2,@Mocked BiConsumer<String[],ShellConsole> _consumer3) {
 		
 		ShellAdapter instance=new ShellAdapter() {
 			@Override
@@ -352,7 +351,7 @@ public class ShellAdapterTest {
 			}
 		};
 
-		Map<String,BiConsumer<String[],OutConsole>> availableCommands=new HashMap<>();
+		Map<String,BiConsumer<String[],ShellConsole>> availableCommands=new HashMap<>();
 		availableCommands.put("mockedignitableadapter", _consumer1);
 		availableCommands.put("mockedignitableautocloseable", _consumer2);
 		availableCommands.put("mockedignitablerunnable", _consumer3);
@@ -390,7 +389,7 @@ public class ShellAdapterTest {
 		
 		ShellAdapter instance=new ShellAdapter() {
 			@Override
-			public Map<String,BiConsumer<String[],OutConsole>> getAvailableCommands() {
+			public Map<String,BiConsumer<String[],ShellConsole>> getAvailableCommands() {
 				return Collections.emptyMap();
 			}	
 			@Override
@@ -416,7 +415,7 @@ public class ShellAdapterTest {
 		
 		ShellAdapter instance=new ShellAdapter() {
 			@Override
-			public Map<String,BiConsumer<String[],OutConsole>> getAvailableCommands() {
+			public Map<String,BiConsumer<String[],ShellConsole>> getAvailableCommands() {
 				return Collections.emptyMap();
 			}	
 			@Override
@@ -425,11 +424,11 @@ public class ShellAdapterTest {
 			}	
 
 			@Override
-			protected void interactiveExecution(Map<String, BiConsumer<String[], OutConsole>> _availableCommands) {
+			protected void interactiveExecution(Map<String, BiConsumer<String[], ShellConsole>> _availableCommands) {
 				interactiveExecution.set(true);
 			}
 			@Override
-			protected void batchExecution(Map<String, BiConsumer<String[], OutConsole>> _availableCommands, List<String> _commands) {
+			protected void batchExecution(Map<String, BiConsumer<String[], ShellConsole>> _availableCommands, List<String> _commands) {
 				Assertions.assertEquals(Stream.of("my-Command1 1 dsfd fdf d fd","My-Command_2 2 ds df gf","My-Command_2 3 ds df gf","My-Command_2 4 ds df gf")
 											.collect(Collectors.toList())
 										,_commands);
@@ -459,7 +458,7 @@ public class ShellAdapterTest {
 		
 		ShellAdapter instance=new ShellAdapter() {
 			@Override
-			public Map<String,BiConsumer<String[],OutConsole>> getAvailableCommands() {
+			public Map<String,BiConsumer<String[],ShellConsole>> getAvailableCommands() {
 				return Collections.emptyMap();
 			}	
 			@Override
@@ -468,11 +467,11 @@ public class ShellAdapterTest {
 			}	
 
 			@Override
-			protected void interactiveExecution(Map<String, BiConsumer<String[], OutConsole>> _availableCommands) {
+			protected void interactiveExecution(Map<String, BiConsumer<String[], ShellConsole>> _availableCommands) {
 				interactiveExecution.set(true);
 			}
 			@Override
-			protected void batchExecution(Map<String, BiConsumer<String[], OutConsole>> _availableCommands, List<String> _commands) {
+			protected void batchExecution(Map<String, BiConsumer<String[], ShellConsole>> _availableCommands, List<String> _commands) {
 				Assertions.assertEquals(Stream.of("my-Command1 1 dsfd fdf d fd","My-Command_2 2 ds df gf","My-Command_2 3 ds df gf","My-Command_2 4 ds df gf")
 											.collect(Collectors.toList())
 										,_commands);

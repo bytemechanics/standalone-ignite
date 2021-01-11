@@ -49,7 +49,8 @@ import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
  */
 public class Standalone{
 
-	public static final Pattern PATTERN=Pattern.compile("(?<argument>([^ ]*\".*\")(?:[ ])|([^ ]*\".*\")(?:$)|([^ ]*)(?:[ ])|([^ ]*)(?:$))");
+//	public static final Pattern PATTERN=Pattern.compile("(?<argument>([^ ]*\".*\")(?:[ ])|([^ ]*\".*\")(?:$)|([^ ]*)(?:[ ])|([^ ]*)(?:$))");
+	public static final Pattern PATTERN=Pattern.compile("(?<argument>(([^ ]*\\\"[^\"]*\\\")|([^ ]*))((?:[ ])|(?:$)))");
 	
 	/** Latest standalone instantiated */
 	protected static Standalone self=null; 
@@ -590,10 +591,14 @@ public class Standalone{
 										.map(PATTERN::matcher)
 										.map(matcher -> {
 												List<String> reply=new ArrayList<>();
-
+												
 												while(matcher.find()){
-													reply.add(matcher.group("argument")
-																		.trim());
+													Optional.ofNullable(matcher.group("argument"))
+															.map(String::trim)
+															.map(arg -> {System.out.println("this is my arg: "+arg); return arg;})
+															.map(arg -> (arg.endsWith("\""))? arg.substring(0, arg.indexOf("\""))+arg.substring(arg.indexOf("\"")+1, arg.length()-1) : arg)
+															.map(arg -> {System.out.println("this is my arg after \" purge: "+arg); return arg;})
+															.ifPresent(reply::add);
 												}
 
 												return reply;

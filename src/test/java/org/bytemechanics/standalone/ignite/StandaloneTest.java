@@ -22,6 +22,7 @@ import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -47,6 +48,7 @@ import org.bytemechanics.standalone.ignite.mocks.MockedIgnitableAdapter;
 import org.bytemechanics.standalone.ignite.mocks.StandaloneAppTestParameter;
 import org.bytemechanics.standalone.ignite.mocks.StandaloneAppTestParameter2;
 import org.bytemechanics.standalone.ignite.mocks.StandaloneAppTestParameter3;
+import org.bytemechanics.standalone.ignite.mocks.StandaloneAppTestRegression;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -185,9 +187,10 @@ public class StandaloneTest {
 		Assertions.assertEquals(true, StandaloneAppTestParameter2.ADDITIONALENUMVALUE.getValue(StandaloneAppTestParameter.class).isPresent());
 		Assertions.assertEquals(StandaloneAppTestParameter2.ADDITIONALENUMVALUE, StandaloneAppTestParameter2.ADDITIONALENUMVALUE.getValue(StandaloneAppTestParameter2.class).get());
 	}
+
 	
-	@ParameterizedTest(name = "ParseParameters {0} for StandaloneAppTestParameter.class must parse correctly parameters with spaces")
-	@ValueSource(strings = {"-stringvalue:\"this is my parameter with spaces\",other,again","other,again,-stringvalue:\"this is my parameter with spaces\""})
+	@ParameterizedTest(name = "ParseParameters {0} for StandaloneAppTestParameter3.class must parse correctly parameters with spaces")
+	@ValueSource(strings = {"-stringvalue:\"this is my parameter with spaces\",other,again,-stringvalue2:\"*- this is my parameter with spaces2\"","other,again,-stringvalue2:\"*- this is my parameter with spaces2\",-stringvalue:\"this is my parameter with spaces\""})
 	@SuppressWarnings("UnnecessaryUnboxing")
 	public void parseParametersWithSpaces(final String _args,final @Mocked Ignitable _ignitable){
 		
@@ -202,7 +205,30 @@ public class StandaloneTest {
 							.ignite();
 		
 		//Verify
-		Assertions.assertEquals("\"this is my parameter with spaces\"", StandaloneAppTestParameter3.STRINGVALUE.get(String.class));
+		Assertions.assertEquals("this is my parameter with spaces", StandaloneAppTestParameter3.STRINGVALUE.get(String.class));
+		Assertions.assertEquals("*- this is my parameter with spaces2", StandaloneAppTestParameter3.STRINGVALUE2.get(String.class));
+	}
+	
+	@ParameterizedTest(name = "ParseParameters {0} for StandaloneAppTestRegression.class must parse correctly parameters with spaces")
+	@ValueSource(strings = {"-path:\"c:\\tmp a\\\" -exclude:\"*- copia.txt\" -verbose:true","-path:\"c:\\tmp a\\\" -patterns:*.txt,*.bat -exclude:\"*- copia.txt\" -verbose:true"})
+	@SuppressWarnings("UnnecessaryUnboxing")
+	public void parseParametersWithSpacesRegression(final String _args,final @Mocked Ignitable _ignitable){
+		
+		//Prepare
+		final String[] arguments=_args.split(" ");
+		
+		//Execute
+		Standalone.builder(() -> _ignitable)
+							.parameters(StandaloneAppTestRegression.class)
+							.arguments(arguments)
+						.build()
+							.ignite();
+		
+		//Verify
+		Assertions.assertEquals(Paths.get("c:\\tmp a\\"), StandaloneAppTestRegression.PATH.get(Path.class));
+		Assertions.assertEquals("*.txt,*.bat", StandaloneAppTestRegression.PATTERNS.get(String.class));
+		Assertions.assertEquals("*- copia.txt", StandaloneAppTestRegression.EXCLUDE.get(String.class));
+		Assertions.assertEquals(true, StandaloneAppTestRegression.VERBOSE.get(boolean.class));
 	}
 	
 	@ParameterizedTest(name = "ParseParameters {0} for StandaloneAppTestParameter.class must parse correctly the correct values")

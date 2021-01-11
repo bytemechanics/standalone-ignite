@@ -1,3 +1,13 @@
+# Version 2.0.3 (2021/01/11)
+---
+
+## Changes
+* Fixed double comma removal from the arguments when parse
+* Fixed two space scaped arguments
+* Fixed parameter pattern mismatch in certain sceneries with multiple (") scaped parameter
+* Change now shelladapter works with shellconsole everywhere in order to make easier to interact with console on internal commands.
+
+
 # Version 2.0.2 (2021/01/08)
 ---
 

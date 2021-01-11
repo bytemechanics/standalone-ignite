@@ -19,7 +19,7 @@ import org.bytemechanics.standalone.ignite.IgnitableAdapter;
 
 /**
  *
- * @author E103880
+ * @author afarre
  */
 public class MockedIgnitableAdapter extends IgnitableAdapter {
 
