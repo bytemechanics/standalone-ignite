@@ -55,7 +55,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 /**
  *
- * @author E103880
+ * @author afarre
  */
 public class ShellAdapterTest {
 	

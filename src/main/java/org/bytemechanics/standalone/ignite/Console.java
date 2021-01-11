@@ -21,7 +21,7 @@ import java.util.function.Consumer;
 
 /**
  * Console abstraction
- * @author E103880
+ * @author afarre
  */
 public interface Console {
 

@@ -19,7 +19,7 @@ import org.bytemechanics.standalone.ignite.Ignitable;
 
 /**
  *
- * @author E103880
+ * @author afarre
  */
 public class MockedIgnitableAutocloseable implements Ignitable,AutoCloseable {
 
