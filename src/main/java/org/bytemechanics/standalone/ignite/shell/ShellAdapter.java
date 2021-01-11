@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.bytemechanics.standalone.ignite.Ignitable;
 import org.bytemechanics.standalone.ignite.IgnitableAdapter;
-import org.bytemechanics.standalone.ignite.OutConsole;
 import org.bytemechanics.standalone.ignite.Standalone;
 import org.bytemechanics.standalone.ignite.internal.commons.functional.Tuple;
 import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
@@ -52,6 +51,10 @@ public abstract class ShellAdapter extends IgnitableAdapter {
 	 */
 	protected abstract Map<Class<? extends Ignitable>,Standalone.StandaloneBuilder> getIgnitableShellCommands();
 
+	/**
+	 * Return the shell console
+	 * @return the shell console
+	 */
 	protected ShellConsole getShell() {
 		return (ShellConsole)getConsole()
 					.filter(consoleInstance -> ShellConsole.class.isAssignableFrom(consoleInstance.getClass()))
@@ -59,6 +62,11 @@ public abstract class ShellAdapter extends IgnitableAdapter {
 					.orElseThrow(() -> new UnknownConsoleType(getConsole().orElse(null)));
 	}
 	
+	/**
+	 * Return a list of command name available separated by comma (included the standard ones)
+	 * @return string with a list of available commands separated by comma
+	 * @see ShellAdapter#getIgnitableShellCommands() 
+	 */
 	protected String getCommandList(){
 		return getIgnitableShellCommands()
 					.keySet()
@@ -69,9 +77,14 @@ public abstract class ShellAdapter extends IgnitableAdapter {
 						.collect(Collectors.joining(",","",",exit,help"));
 	}
 	
-	public Map<String,BiConsumer<String[],OutConsole>> getAvailableCommands(){
+	/**
+	 * Return a map with the available commands provided by getIgnitableShellCommands() and the standard commands: help and exit
+	 * @return map with the command name as key and a biconsumer of arguments and shellConsole as value
+	 * @see ShellAdapter#getIgnitableShellCommands() 
+	 */
+	protected Map<String,BiConsumer<String[],ShellConsole>> getAvailableCommands(){
 		
-		final Map<String,BiConsumer<String[],OutConsole>> reply=new HashMap<>();
+		final Map<String,BiConsumer<String[],ShellConsole>> reply=new HashMap<>();
 		
 		getIgnitableShellCommands()
 				.entrySet()
@@ -80,7 +93,7 @@ public abstract class ShellAdapter extends IgnitableAdapter {
 						.map(tuple -> tuple.left(tuple.left().getSimpleName()))
 						.map(tuple -> tuple.left(tuple.left().toLowerCase()))
 						.map(tuple -> tuple.right(tuple.right().showBanner(false)))
-						.map(tuple -> tuple.right((BiConsumer<String[],OutConsole>)
+						.map(tuple -> tuple.right((BiConsumer<String[],ShellConsole>)
 														(args,console) -> {
 																		tuple.right()
 																			.arguments(args)
@@ -105,7 +118,11 @@ public abstract class ShellAdapter extends IgnitableAdapter {
 		
 		return reply;
 	}
-	
+	/**
+	 * Split commands from the given arguments, to do this join all arguments and split per ; separator
+	 * @param _arguments command line argument to shell process
+	 * @return List of commands (with command name)
+	 */
 	protected List<String> splitCommands(final String[] _arguments){
 		
 		return Stream.of(_arguments)
@@ -120,6 +137,12 @@ public abstract class ShellAdapter extends IgnitableAdapter {
 										.filter(commandLines -> !commandLines.isEmpty())
 										.collect(Collectors.toList());
 	}
+	/**
+	 * Build a commandExecution for the given command
+	 * @param _command command to execute (with the command name)
+	 * @return Optional of CommandExecution from the given command
+	 * @see CommandExecution
+	 */
 	protected Optional<CommandExecution> buildCommand(final String _command){
 		
 		return Optional.ofNullable(_command)
@@ -128,14 +151,20 @@ public abstract class ShellAdapter extends IgnitableAdapter {
 						.filter(words -> words.length>0)
 						.filter(words -> !words[0].trim().isEmpty())
 						.map(words -> CommandExecution.from(words[0],Arrays.stream(words, 1, words.length)
-																.map(String::trim)
-																.filter(commArg -> !commArg.isEmpty())
-																	.collect(Collectors.toList())
-																		.toArray(new String[0])));
+																			.filter(commArg -> !commArg.isEmpty())
+																			.map(String::trim)
+																			.collect(Collectors.toList())
+																				.toArray(new String[0])));
 	}
-	protected void executeCommand(final Map<String,BiConsumer<String[],OutConsole>> _availableCommands,final String _commands){
+	/**
+	 * Execute the single command provided and given the available commands
+	 * @param _availableCommands commands available for this shell
+	 * @param _command command to execute (with the command name)
+	 * @throws UnknownCommand if the command is unknown
+	 */
+	protected void executeCommand(final Map<String,BiConsumer<String[],ShellConsole>> _availableCommands,final String _command){
 		
-		buildCommand(_commands)
+		buildCommand(_command)
 				.ifPresent(command -> {
 					Optional.of(command.getName())
 								.map(String::toLowerCase)
@@ -145,14 +174,23 @@ public abstract class ShellAdapter extends IgnitableAdapter {
 				});
 	}
 	
-	protected void batchExecution(final Map<String,BiConsumer<String[],OutConsole>> _availableCommands,final List<String> _commands){
+	/**
+	 * Start batch execution of the given list of commands with the available commands provided
+	 * @param _availableCommands commands available for this shell
+	 * @param _commands list of commands to execute (with the command name)
+	 */
+	protected void batchExecution(final Map<String,BiConsumer<String[],ShellConsole>> _availableCommands,final List<String> _commands){
 		
 		_commands.stream()
 					.map(String::trim)
 					.filter(command -> !command.isEmpty())
 					.forEach(command -> executeCommand(_availableCommands,command));
 	}
-	protected void interactiveExecution(final Map<String,BiConsumer<String[],OutConsole>> _availableCommands){
+	/**
+	 * Start interactive execution with the available commands provided
+	 * @param _availableCommands commands available for this shell
+	 */
+	protected void interactiveExecution(final Map<String,BiConsumer<String[],ShellConsole>> _availableCommands){
 		
 		while(!this.stopExecution){
 			getShell().write(">> ");
@@ -170,7 +208,7 @@ public abstract class ShellAdapter extends IgnitableAdapter {
 	@Override
 	public void startup()  {
 		
-		final Map<String,BiConsumer<String[],OutConsole>> availableCommands=getAvailableCommands();
+		final Map<String,BiConsumer<String[],ShellConsole>> availableCommands=getAvailableCommands();
 		final List<String> commands=getStandalone()
 										.map(Standalone::getArguments)
 										.map(this::splitCommands)

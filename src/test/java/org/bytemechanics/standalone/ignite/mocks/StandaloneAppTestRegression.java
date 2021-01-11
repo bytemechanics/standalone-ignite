@@ -15,6 +15,7 @@
  */
 package org.bytemechanics.standalone.ignite.mocks;
 
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Function;
 import org.bytemechanics.standalone.ignite.Parameter;
@@ -25,21 +26,23 @@ import org.bytemechanics.standalone.ignite.beans.DefaultParameterContainer;
  * @author afarre
  */
 @SuppressWarnings("unchecked")
-public enum StandaloneAppTestParameter3 implements Parameter{
-
-	STRINGVALUE(String.class,"string value with spaces",""),
-	STRINGVALUE2(String.class,"string value with spaces",""),
+public enum StandaloneAppTestRegression implements Parameter{
+	
+	PATH(Path.class,"path"),
+	PATTERNS(String.class,"patterns list","*.txt,*.bat"),
+	EXCLUDE(String.class,"Exclusions list"," "),
+	VERBOSE(boolean.class,"Verbose flag","false"),
 	;
 	
 	private final DefaultParameterContainer container;
 	
-	<T extends Object> StandaloneAppTestParameter3(final Class<T> _type,final String _description){
+	<T extends Object> StandaloneAppTestRegression(final Class<T> _type,final String _description){
 		this(_type,_description,null,null);
 	}
-	<T extends Object> StandaloneAppTestParameter3(final Class<T> _type,final String _description,final String _default){
+	<T extends Object> StandaloneAppTestRegression(final Class<T> _type,final String _description,final String _default){
 		this(_type,_description,_default,null);
 	}
-	<T extends Object> StandaloneAppTestParameter3(final Class<T> _type,final String _description,final String _default,final Function<String,T> _parser){
+	<T extends Object> StandaloneAppTestRegression(final Class<T> _type,final String _description,final String _default,final Function<String,T> _parser){
 		this.container=DefaultParameterContainer.builder()
 												.name(name())
 												.type(_type)
