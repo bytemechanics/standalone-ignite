@@ -1,3 +1,11 @@
+# Version 2.0.4 (2021/01/12)
+---
+
+## Changes
+* Remove unnecesary system.out from parse parameters
+* Add shell batch execution echo on commands invoked
+
+
 # Version 2.0.3 (2021/01/11)
 ---
 

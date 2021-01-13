@@ -183,6 +183,7 @@ public abstract class ShellAdapter extends IgnitableAdapter {
 		
 		_commands.stream()
 					.map(String::trim)
+					.peek(command -> getShell().info(">> "+command))
 					.filter(command -> !command.isEmpty())
 					.forEach(command -> executeCommand(_availableCommands,command));
 	}

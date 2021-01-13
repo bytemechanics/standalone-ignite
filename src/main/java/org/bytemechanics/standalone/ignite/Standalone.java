@@ -595,9 +595,7 @@ public class Standalone{
 												while(matcher.find()){
 													Optional.ofNullable(matcher.group("argument"))
 															.map(String::trim)
-															.map(arg -> {System.out.println("this is my arg: "+arg); return arg;})
 															.map(arg -> (arg.endsWith("\""))? arg.substring(0, arg.indexOf("\""))+arg.substring(arg.indexOf("\"")+1, arg.length()-1) : arg)
-															.map(arg -> {System.out.println("this is my arg after \" purge: "+arg); return arg;})
 															.ifPresent(reply::add);
 												}
 
