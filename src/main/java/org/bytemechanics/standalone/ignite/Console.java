@@ -23,7 +23,7 @@ import java.util.function.Consumer;
  * Console abstraction
  * @author afarre
  */
-public interface Console {
+public interface Console extends AutoCloseable {
 
 	/**
 	 * Recover console formatter
@@ -88,4 +88,11 @@ public interface Console {
 				.map(message -> getFormatter().apply(message, _args))
 				.ifPresent(message -> getVerbosePrinter().accept(message));
 	}
+
+	/**
+	 * @see AutoCloseable
+	 * @since 2.0.5
+	 */
+	@Override
+	public default void close(){};
 }

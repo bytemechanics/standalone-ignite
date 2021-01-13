@@ -15,22 +15,43 @@
  */
 package org.bytemechanics.standalone.ignite.shell;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.bytemechanics.standalone.ignite.Console;
-import org.bytemechanics.standalone.ignite.OutConsole;
+import org.bytemechanics.standalone.ignite.internal.commons.functional.LambdaUnchecker;
+import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
 
 /**
  * Standalone shell console
  * @author afarre
  * @since 2.0.0
  */
-public class ShellConsole extends OutConsole implements Console {
+public class ShellConsole implements Console {
 
+	protected final Consumer<String> verbose;
+	protected final Consumer<String> info;
+	protected final Consumer<String> error;
+	
 	protected final Consumer<String> writer;
 	protected final Supplier<String> reader;
 
+	protected final boolean verboseEnabled;
+	protected final BufferedReader inputReader;
+	protected final BiFunction<String,Object[],String> formatter;
+
+	/**
+	 * Default shell console simple formatter with {} as placeholder and no verbose
+	 * @since 2.0.5
+	 */
+	public ShellConsole(){
+		this(System.console(),(message,args) -> SimpleFormat.format(message, args) ,false);
+	}
 	/**
 	 * Shell console constructor with the default system console
 	 * @param _formatter console message formatter
@@ -46,9 +67,20 @@ public class ShellConsole extends OutConsole implements Console {
 	 * @param _verboseEnabled flag to indicate if the console must print verbose messages
 	 */
 	public ShellConsole(final java.io.Console _console,final BiFunction<String,Object[],String> _formatter,final boolean _verboseEnabled){
-		super(_formatter,_verboseEnabled,message -> _console.printf(message+"\n"),message -> _console.printf(message+"\n"),message -> _console.printf(message+"\n"));
-		this.writer=_console::printf;
-		this.reader=_console::readLine;
+		if(_console!=null){
+			this.writer=_console::printf;
+			this.inputReader=null;
+			this.reader=_console::readLine;
+		}else{
+			this.writer=System.out::println;
+			this.inputReader=new BufferedReader(new InputStreamReader(System.in));
+			this.reader=LambdaUnchecker.uncheckedSupplier(this.inputReader::readLine);
+		}
+		this.formatter=_formatter;
+		this.verboseEnabled=_verboseEnabled;
+		this.verbose=(message) -> write(message+"\n");
+		this.info=(message) -> write(message+"\n");
+		this.error=(message) -> write(message+"\n");
 	}
 
 	/**
@@ -67,7 +99,41 @@ public class ShellConsole extends OutConsole implements Console {
 		return this.reader.get();
 	}
 
+	@Override
+	public BiFunction<String, Object[], String> getFormatter() {
+		return this.formatter;
+	}
+	
+	@Override
+	public boolean isVerboseEnabled(){
+		return this.verboseEnabled;
+	}
+	
+	@Override
+	public Consumer<String> getErrorPrinter(){
+		return this.error;
+	}
+	@Override
+	public Consumer<String> getInfoPrinter(){
+		return this.info;
+	}
+	@Override
+	public Consumer<String> getVerbosePrinter(){
+		return this.verbose;
+	}
 
+	
+	@Override
+	public void close(){
+		if(this.inputReader!=null){
+			try {
+				this.inputReader.close();
+			} catch (IOException ex) {
+				Logger.getLogger(ShellConsole.class.getName()).log(Level.WARNING, null, ex);
+			}
+		}
+	}
+	
 	@Override
 	public int hashCode() {
 		int hash = 3;
