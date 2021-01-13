@@ -283,6 +283,7 @@ public class Standalone{
 			this.instance.shutdownException(e);
 		}finally{
 			closeAutoCloseables();
+			this.console.close();
 		}
 
 		return reply;

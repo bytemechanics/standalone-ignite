@@ -1,3 +1,13 @@
+# Version 2.0.5 (2021/01/12)
+---
+
+## Changes
+* Simplify shell console instance by adding a default constructor
+* Make Console autocloseable to be able to close any opened resource
+* Changed ShellConsole has no inheritance relation with OutConsole anymore
+* Fixed #47 - Compatibility in shells without console available for java (like jenkins jobs, eclipse or netbeans)
+
+
 # Version 2.0.4 (2021/01/12)
 ---
 
