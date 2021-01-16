@@ -1,3 +1,10 @@
+# Version 2.0.6 (2021/01/16)
+---
+
+## Changes
+* Fix #49 - ShellConsole when no default console is provided adds an additional newline 
+
+
 # Version 2.0.5 (2021/01/12)
 ---
 

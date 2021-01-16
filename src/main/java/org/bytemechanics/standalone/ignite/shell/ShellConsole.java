@@ -72,7 +72,7 @@ public class ShellConsole implements Console {
 			this.inputReader=null;
 			this.reader=_console::readLine;
 		}else{
-			this.writer=System.out::println;
+			this.writer=System.out::print;
 			this.inputReader=new BufferedReader(new InputStreamReader(System.in));
 			this.reader=LambdaUnchecker.uncheckedSupplier(this.inputReader::readLine);
 		}

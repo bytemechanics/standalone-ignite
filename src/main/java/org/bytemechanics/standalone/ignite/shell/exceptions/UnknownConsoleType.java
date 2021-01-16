@@ -22,7 +22,7 @@ import org.bytemechanics.standalone.ignite.internal.commons.string.SimpleFormat;
  * Unknown console type exception. Raised when the received console is not a ShellConsole instance
  * @author afarre
  * @since 2.0.0
- * @see ShellConsole
+ * @see org.bytemechanics.standalone.ignite.shell.ShellConsole
  */
 public class UnknownConsoleType extends RuntimeException{
 	
