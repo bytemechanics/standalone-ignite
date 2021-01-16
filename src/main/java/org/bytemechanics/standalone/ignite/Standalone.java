@@ -536,7 +536,7 @@ public class Standalone{
 		
 		/**
 		* Standalone description for help purposes. OPTIONAL
-		* @param _name name of the application to use as banner if no name shows no banner
+		* @param _description descrition to populate for help purposes
 		* @return StandaloneBuilder to chain other properties
 		* @since 2.0.0
 		*/
