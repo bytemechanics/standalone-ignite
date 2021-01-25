@@ -25,6 +25,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -791,5 +792,22 @@ public class StandaloneTest {
 		Assertions.assertEquals("info-message-1", console.poll());
 		Assertions.assertEquals("error-message-2", console.poll());
 		Assertions.assertEquals("verbose-message-3", console.poll());
+	}
+	
+	
+	@SuppressWarnings("static-access")
+	static Stream<Arguments> argumentsDatapack(){
+		return Stream.of(	Arguments.of(new String[]{"-path:\"Allianz","Brasil\\BR","Backoffice","e","Sinistros","Team","-","Dev\"","-patterns:*.class,test*","-verbose:true"},new String[]{"-path:Allianz Brasil\\BR Backoffice e Sinistros Team - Dev","-patterns:*.class,test*","-verbose:true"})
+							);
+	}
+	@ParameterizedTest(name = "Arguments {0} should build the following arguments {1}")
+	@MethodSource("argumentsDatapack")
+	public void arguments(final String[] _originalArguments,final String[] _buildArguments){
+		
+		Standalone standalone=Standalone.builder(MockedIgnitableAdapter::new)
+														.arguments(_originalArguments)
+													.build();
+		System.out.println("Found arguments "+Arrays.toString(standalone.getArguments()));
+		Assertions.assertArrayEquals(_buildArguments, standalone.getArguments());
 	}
 }

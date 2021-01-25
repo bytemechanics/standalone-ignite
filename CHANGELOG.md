@@ -1,3 +1,10 @@
+# Version 2.0.7 (2021/01/25)
+---
+
+## Changes
+* Fix #51 - ShellAdapter removes the space scape during command batch execution 
+
+
 # Version 2.0.6 (2021/01/16)
 ---
 

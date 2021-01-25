@@ -179,16 +179,31 @@ public class ShellAdapterTest {
 
 	@SuppressWarnings("static-access")
 	static Stream<Arguments> multilineCommandDatapack(){
-		return Stream.of(Arguments.of("",Collections.emptyList())
-							,Arguments.of("command 1; command 2",Stream.of("command 1","command 2").collect(Collectors.toList()))
-							,Arguments.of("command \"style 1\"; command \"style 2\"",Stream.of("command \"style 1\"","command \"style 2\"").collect(Collectors.toList()))
-							,Arguments.of("command 'style 1'; command 'style 2'",Stream.of("command 'style 1'","command 'style 2'").collect(Collectors.toList()))
-							,Arguments.of(";command 'style 1'; command 2; command 3 ; command4;;;command5",Stream.of("command 'style 1'","command 2","command 3","command4","command5").collect(Collectors.toList()))
-							,Arguments.of("command 'style 1'; command 2; command 3 ; command4;; ;command5;",Stream.of("command 'style 1'","command 2","command 3","command4","command5").collect(Collectors.toList()))
-							,Arguments.of(";",Collections.emptyList())
-							,Arguments.of("; ;    ;",Collections.emptyList())
-						)
-						.map(arguments -> Arguments.of(((String)arguments.get()[0]).split(" "),arguments.get()[1]));
+		return Stream.of(Arguments.of(new String[0],Collections.emptyList())
+							,Arguments.of(new String[]{""},Collections.emptyList())
+							,Arguments.of(new String[]{"command","1;","command","2"},Stream.of("command 1","command 2").collect(Collectors.toList()))
+							,Arguments.of(new String[]{"command","\"style 1\";","command","\"style 2\""},Stream.of("command \"style 1\"","command \"style 2\"").collect(Collectors.toList()))
+							,Arguments.of(new String[]{"command","'style 1';","command","'style 2'"},Stream.of("command 'style 1'","command 'style 2'").collect(Collectors.toList()))
+							,Arguments.of(new String[]{";command","'style 1';","command","2;","command","3",";","command4;;;command5"},Stream.of("command 'style 1'","command 2","command 3","command4","command5").collect(Collectors.toList()))
+							,Arguments.of(new String[]{"command","'style","1';","command","2;","command","3",";","command4;;",";command5;"},Stream.of("command 'style 1'","command 2","command 3","command4","command5").collect(Collectors.toList()))
+							,Arguments.of(new String[]{"","'style","1';command","2;","command","3",";","command4;;",";command5;"},Stream.of("'style 1'","command 2","command 3","command4","command5").collect(Collectors.toList()))
+							,Arguments.of(new String[]{";"},Collections.emptyList())
+							,Arguments.of(new String[]{";",";",";"},Collections.emptyList())
+							,Arguments.of(new String[]{"command","-path:Allianz Brasil/myPath with spaces","-arg2:true;"
+																,"command2","-path:Allianz Brasil/myPath with spaces;"
+															,"-arg2:false"}
+																	,Stream.of("command -path:\"Allianz Brasil/myPath with spaces\" -arg2:true"
+																			,"command2 -path:\"Allianz Brasil/myPath with spaces\""
+																		,"-arg2:false")
+																			.collect(Collectors.toList()))
+							,Arguments.of(new String[]{"command","-path:Allianz Brasil/myPath with spaces","-path2:Allianz España\\myPath with spaces","-arg2:true;"
+																,"command2","-path:Allianz Brasil/myPath with spaces;"
+															,"-arg2:false"}
+															,Stream.of("command -path:\"Allianz Brasil/myPath with spaces\" -path2:\"Allianz España\\myPath with spaces\" -arg2:true"
+																			,"command2 -path:\"Allianz Brasil/myPath with spaces\""
+																,"-arg2:false")
+																.collect(Collectors.toList()))
+						);
 	}	
 	@ParameterizedTest(name="When try to split commands from {0} the result should be {1}")
 	@MethodSource("multilineCommandDatapack")
