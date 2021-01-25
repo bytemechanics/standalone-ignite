@@ -19,11 +19,14 @@ import org.bytemechanics.standalone.ignite.mocks.StandaloneAppTestParameter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import org.bytemechanics.standalone.ignite.exceptions.InvalidParameter;
 import org.bytemechanics.standalone.ignite.exceptions.NullOrEmptyMandatoryParameter;
 import org.bytemechanics.standalone.ignite.internal.commons.functional.LambdaUnchecker;
+import org.bytemechanics.standalone.ignite.mocks.StandaloneAppTestRegression;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -130,6 +133,30 @@ public class ParameterTest {
 		Assertions.assertEquals("TEST", StandaloneAppTestParameter.STRINGVALUE.getValue(String.class).get());
 		Assertions.assertEquals(true, StandaloneAppTestParameter.ENUMVALUE.getValue(StandaloneAppTestParameter.class).isPresent());
 		Assertions.assertEquals(StandaloneAppTestParameter.ENUMVALUE, StandaloneAppTestParameter.ENUMVALUE.getValue(StandaloneAppTestParameter.class).get());
+	}
+	
+	@ParameterizedTest(name = "ValidateRefressionParameters {0} for StandaloneAppTestParameter.class must validate correctly the correct values")
+	@ValueSource(strings = {"-path:Allianz Brasil\\BR Backoffice e Sinistros Team -Dev;-patterns:*.class,test*;-verbose:true"})
+	@SuppressWarnings("UnnecessaryUnboxing")
+	public void validateRegressionParameters(final String _args){
+		
+		//Prepare
+		final String[] arguments=_args.split(";");
+		
+		//Execute
+		Parameter.parseParameters(StandaloneAppTestRegression.class,arguments);
+		Parameter.validateParameters(StandaloneAppTestRegression.class);
+			
+		//Verify
+		Assertions.assertEquals(true, StandaloneAppTestRegression.PATH.getValue(Path.class).isPresent());
+		Assertions.assertEquals(Paths.get("Allianz Brasil\\BR Backoffice e Sinistros Team -Dev")
+										,StandaloneAppTestRegression.PATH.get(Path.class));
+		Assertions.assertEquals(true, StandaloneAppTestRegression.PATTERNS.getValue(String.class).isPresent());
+		Assertions.assertEquals("*.class,test*"
+										,StandaloneAppTestRegression.PATTERNS.get(String.class));
+		Assertions.assertEquals(true, StandaloneAppTestRegression.VERBOSE.getValue(boolean.class).isPresent());
+		Assertions.assertEquals(Boolean.TRUE
+										, StandaloneAppTestRegression.VERBOSE.get(Boolean.class));
 	}
 	
 	@ParameterizedTest(name = "ValidateParameters {0} for StandaloneAppTestParameter.class must fail with wrong value")

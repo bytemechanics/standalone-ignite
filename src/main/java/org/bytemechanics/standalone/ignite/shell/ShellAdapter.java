@@ -118,6 +118,18 @@ public abstract class ShellAdapter extends IgnitableAdapter {
 		
 		return reply;
 	}
+	
+	private String rebuildScapeSpaces(final String _arg){
+		return Optional.ofNullable(_arg)
+								.map(String::trim)
+								.filter(arg -> !arg.isEmpty())
+								.filter(arg -> arg.contains(" "))
+								.filter(arg -> arg.contains(":"))
+								.map(arg -> arg.replaceFirst("[\\:]", ":\""))
+								.map(arg -> (arg.endsWith(";"))? arg.replaceFirst(";$", "\";") : arg.concat("\""))
+								.orElse(_arg);
+	}
+	
 	/**
 	 * Split commands from the given arguments, to do this join all arguments and split per ; separator
 	 * @param _arguments command line argument to shell process
@@ -126,6 +138,7 @@ public abstract class ShellAdapter extends IgnitableAdapter {
 	protected List<String> splitCommands(final String[] _arguments){
 		
 		return Stream.of(_arguments)
+							.map(this::rebuildScapeSpaces)
 							.reduce((left,right) -> String.join(" ",left,right))
 								.map(String::trim)
 								.filter(commandLines -> !commandLines.isEmpty())
@@ -151,10 +164,10 @@ public abstract class ShellAdapter extends IgnitableAdapter {
 						.filter(words -> words.length>0)
 						.filter(words -> !words[0].trim().isEmpty())
 						.map(words -> CommandExecution.from(words[0],Arrays.stream(words, 1, words.length)
-																			.filter(commArg -> !commArg.isEmpty())
-																			.map(String::trim)
-																			.collect(Collectors.toList())
-																				.toArray(new String[0])));
+																											.filter(commArg -> !commArg.isEmpty())
+																								.map(String::trim)
+																								.collect(Collectors.toList())
+																									.toArray(new String[0])));
 	}
 	/**
 	 * Execute the single command provided and given the available commands
@@ -211,9 +224,9 @@ public abstract class ShellAdapter extends IgnitableAdapter {
 		
 		final Map<String,BiConsumer<String[],ShellConsole>> availableCommands=getAvailableCommands();
 		final List<String> commands=getStandalone()
-										.map(Standalone::getArguments)
-										.map(this::splitCommands)
-										.orElseThrow(NoStandaloneInstance::new);
+												.map(Standalone::getArguments)
+												.map(this::splitCommands)
+												.orElseThrow(NoStandaloneInstance::new);
 		if(commands.isEmpty()){
 			interactiveExecution(availableCommands);
 		}else{

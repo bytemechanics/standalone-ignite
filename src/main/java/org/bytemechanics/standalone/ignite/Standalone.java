@@ -596,6 +596,7 @@ public class Standalone{
 												while(matcher.find()){
 													Optional.ofNullable(matcher.group("argument"))
 															.map(String::trim)
+															.filter(arg -> !arg.isEmpty())
 															.map(arg -> (arg.endsWith("\""))? arg.substring(0, arg.indexOf("\""))+arg.substring(arg.indexOf("\"")+1, arg.length()-1) : arg)
 															.ifPresent(reply::add);
 												}
