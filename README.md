@@ -138,7 +138,7 @@ public final class StandaloneApp implements Ignitable{
 					(...)
 					.parameters(StandaloneAppTestParameter.class)
 					(...)
-				.build();
+				.build()
 					.ignite();
 	}
 }
@@ -171,7 +171,7 @@ public final class StandaloneApp extends IgnitableAdapter{
 					(...)
 					.parameters(StandaloneAppTestParameter.class)
 					(...)
-				.build();
+				.build()
 					.ignite();
 	}
 }
